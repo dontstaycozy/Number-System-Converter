@@ -307,4 +307,5 @@ graph TD
 3. Expected Output: Hexadecimal correctly outputs 56BC75E2D63100000 instead of converting the string into scientific notation. Text elegantly wraps within the container bounds.
 
 ### Sample Output
-When the application opens, it displays a white container centered on the screen titled "Number System Converter". Three distinct input sections are visible. Typing the number "255" into the first field while "Decimal (Base 10)" is selected instantly populates the box below it with the text "Binary: 11111111", "Octal: 377", "Decimal: 255", and "Hexadecimal: FF". The layout is clear, organized, and updates in real time without needing to click a submit button.
+![Sample-1](Sample-Output-1.png)
+![Sample-2](Sample-Output-2.png)
