@@ -89,7 +89,7 @@ graph TD
   A[Start Program] --> B[Display User Interface]
   B --> C[Accept User Input and Base Selection]
   C --> D[Validate Input Data]
-  D --> E[Process Mathematical Conversions]
+  D --> E[Process Conversions]
   E --> F[Output Converted Number Systems]
 ```
 
