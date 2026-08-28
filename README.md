@@ -86,18 +86,16 @@ END PROGRAM
 ### Flowchart
 ```mermaid
 graph TD
-  A[Start] --> B[Render Initial Case UI]
-  B --> C[Receive Input Number and Base]
-  C --> D{Is Input Valid?}
-  D -- No --> E[Display Error Message]
-  D -- Yes --> F[Convert to BigInt]
-  F --> G[Convert BigInt to Binary, Octal, Decimal, Hex]
-  G --> H[Display All Conversions in Grid]
-  H --> I{User Action}
-  E --> I
-  I -- Add Case --> J[Generate New Case Container]
-  J --> C
-  I -- Remove Case --> K[Delete Case Container]
+  A[Input Event Triggered] --> B[Read rawValue & inBase]
+  B --> C{Is rawValue empty?}
+  C -- Yes --> D[Display 'Awaiting input...']
+  C -- No --> E{Regex Validation Pass?}
+  E -- No --> F[Display 'Invalid input' Error]
+  E -- Yes --> G[Parse as BigInt]
+  G --> H{Try/Catch: Successful?}
+  H -- No --> I[Display 'Number too large' Error]
+  H -- Yes --> J[Format to Base 2, 8, 10, 16 Strings]
+  J --> K[Inject Results into DOM Grid]
 ```
 
 ### Program Implementation
