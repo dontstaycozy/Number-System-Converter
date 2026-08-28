@@ -86,16 +86,11 @@ END PROGRAM
 ### Flowchart
 ```mermaid
 graph TD
-  A[Input Event Triggered] --> B[Read rawValue & inBase]
-  B --> C{Is rawValue empty?}
-  C -- Yes --> D[Display 'Awaiting input...']
-  C -- No --> E{Regex Validation Pass?}
-  E -- No --> F[Display 'Invalid input' Error]
-  E -- Yes --> G[Parse as BigInt]
-  G --> H{Try/Catch: Successful?}
-  H -- No --> I[Display 'Number too large' Error]
-  H -- Yes --> J[Format to Base 2, 8, 10, 16 Strings]
-  J --> K[Inject Results into DOM Grid]
+  A[Start Program] --> B[Display User Interface]
+  B --> C[Accept User Input and Base Selection]
+  C --> D[Validate Input Data]
+  D --> E[Process Mathematical Conversions]
+  E --> F[Output Converted Number Systems]
 ```
 
 ### Program Implementation
