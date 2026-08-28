@@ -98,9 +98,6 @@ graph TD
   I -- Add Case --> J[Generate New Case Container]
   J --> C
   I -- Remove Case --> K[Delete Case Container]
-  K --> C
-  I -- Toggle Theme --> L[Switch Light/Dark Mode]
-  L --> C
 ```
 
 ### Program Implementation
