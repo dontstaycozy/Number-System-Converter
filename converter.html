@@ -1,107 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Number System Converter</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Space Grotesk"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-slate-100 p-8 font-sans text-slate-800">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen p-8 font-sans text-slate-800 dark:text-indigo-100 transition-colors duration-300">
 
-  <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-    <h1 class="text-3xl font-extrabold mb-8 text-center text-indigo-600">Number System Converter</h1>
-    
-    <div class="grid grid-cols-1 gap-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex justify-end mb-4">
+      <button onclick="toggleTheme()" class="p-3 rounded-full shadow-lg bg-indigo-100 dark:bg-slate-800 text-indigo-700 dark:text-purple-400 hover:bg-indigo-200 dark:hover:bg-slate-700 border border-indigo-200 dark:border-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Toggle Light/Dark Mode">
+        <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+        <svg class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-indigo-900 transition-colors duration-300">
+      <h1 class="text-4xl font-extrabold mb-8 text-center text-indigo-700 dark:text-purple-400 font-mono tracking-tight">Number System Converter</h1>
       
-      <div class="p-6 border border-slate-200 rounded-lg bg-slate-50">
-        <label class="block font-bold mb-3 text-lg">Input 1</label>
-        <div class="flex gap-4 mb-4">
-          <input type="text" id="val1" class="border border-slate-300 p-3 rounded w-full text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Type a number..." oninput="convertNumber('val1', 'base1', 'out1')">
-          <select id="base1" class="border border-slate-300 p-3 rounded bg-white text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" onchange="convertNumber('val1', 'base1', 'out1')">
-            <option value="2">Binary (Base 2)</option>
-            <option value="8">Octal (Base 8)</option>
-            <option value="10" selected>Decimal (Base 10)</option>
-            <option value="16">Hexadecimal (Base 16)</option>
-          </select>
-        </div>
-        <div id="out1" class="mt-4 p-4 bg-white border border-slate-200 rounded text-slate-600 min-h-[100px]">
-          Enter a valid number to see conversions.
-        </div>
+      <div id="cases-container" class="grid grid-cols-1 gap-6">
       </div>
 
-      <div class="p-6 border border-slate-200 rounded-lg bg-slate-50">
-        <label class="block font-bold mb-3 text-lg">Input 2</label>
-        <div class="flex gap-4 mb-4">
-          <input type="text" id="val2" class="border border-slate-300 p-3 rounded w-full text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Type a number..." oninput="convertNumber('val2', 'base2', 'out2')">
-          <select id="base2" class="border border-slate-300 p-3 rounded bg-white text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" onchange="convertNumber('val2', 'base2', 'out2')">
-            <option value="2">Binary (Base 2)</option>
-            <option value="8">Octal (Base 8)</option>
-            <option value="10" selected>Decimal (Base 10)</option>
-            <option value="16">Hexadecimal (Base 16)</option>
-          </select>
-        </div>
-        <div id="out2" class="mt-4 p-4 bg-white border border-slate-200 rounded text-slate-600 min-h-[100px]">
-          Enter a valid number to see conversions.
-        </div>
+      <div class="mt-8 text-center">
+        <button onclick="addCase()" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          + Add Case
+        </button>
       </div>
-
-      <div class="p-6 border border-slate-200 rounded-lg bg-slate-50">
-        <label class="block font-bold mb-3 text-lg">Input 3</label>
-        <div class="flex gap-4 mb-4">
-          <input type="text" id="val3" class="border border-slate-300 p-3 rounded w-full text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Type a number..." oninput="convertNumber('val3', 'base3', 'out3')">
-          <select id="base3" class="border border-slate-300 p-3 rounded bg-white text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" onchange="convertNumber('val3', 'base3', 'out3')">
-            <option value="2">Binary (Base 2)</option>
-            <option value="8">Octal (Base 8)</option>
-            <option value="10" selected>Decimal (Base 10)</option>
-            <option value="16">Hexadecimal (Base 16)</option>
-          </select>
-        </div>
-        <div id="out3" class="mt-4 p-4 bg-white border border-slate-200 rounded text-slate-600 min-h-[100px]">
-          Enter a valid number to see conversions.
-        </div>
-      </div>
-
     </div>
   </div>
 
   <script>
-    function convertNumber(inputId, baseId, outputId) {
-      const rawValue = document.getElementById(inputId).value.trim();
-      const base = parseInt(document.getElementById(baseId).value);
-      const outputDiv = document.getElementById(outputId);
+    let caseCounter = 0;
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    function createCaseHTML(id) {
+      return `
+        <div id="case-${id}" class="p-6 border border-slate-200 dark:border-indigo-800 rounded-xl bg-slate-50 dark:bg-slate-800 relative shadow-sm dark:shadow-inner transition-colors duration-300">
+          <div class="flex justify-between items-center mb-4">
+            <label class="font-bold text-lg text-indigo-800 dark:text-purple-300">Conversion Case</label>
+            <button onclick="removeCase(${id})" class="remove-btn p-2 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg hidden transition-colors focus:outline-none" title="Remove Case">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-600 dark:text-indigo-300 mb-1">Input Value</label>
+              <input type="text" id="val-${id}" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-indigo-700 p-3 rounded-lg text-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-purple-500 placeholder-slate-400 dark:placeholder-slate-500 transition-colors" placeholder="Type here..." oninput="convertNumber(${id})">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-600 dark:text-indigo-300 mb-1">From Base</label>
+              <select id="inBase-${id}" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-indigo-700 p-3 rounded-lg text-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors" onchange="convertNumber(${id})">
+                <option value="2">Binary (Base 2)</option>
+                <option value="8">Octal (Base 8)</option>
+                <option value="10" selected>Decimal (Base 10)</option>
+                <option value="16">Hexadecimal (Base 16)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="out-${id}" class="mt-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-indigo-900 rounded-lg min-h-[100px] flex items-center justify-center text-slate-500 dark:text-indigo-400 transition-colors duration-300">
+            Awaiting input...
+          </div>
+        </div>
+      `;
+    }
+
+    function addCase() {
+      caseCounter++;
+      const container = document.getElementById('cases-container');
+      container.insertAdjacentHTML('beforeend', createCaseHTML(caseCounter));
+      updateRemoveButtons();
+    }
+
+    function removeCase(id) {
+      const caseEl = document.getElementById(`case-${id}`);
+      if (caseEl && document.querySelectorAll('[id^="case-"]').length > 1) {
+        caseEl.remove();
+        updateRemoveButtons();
+      }
+    }
+
+    function updateRemoveButtons() {
+      const buttons = document.querySelectorAll('.remove-btn');
+      if (buttons.length <= 1) {
+        buttons.forEach(btn => btn.classList.add('hidden'));
+      } else {
+        buttons.forEach(btn => btn.classList.remove('hidden'));
+      }
+    }
+
+    function convertNumber(id) {
+      const rawValue = document.getElementById(`val-${id}`).value.trim();
+      const inBase = parseInt(document.getElementById(`inBase-${id}`).value);
+      const outputDiv = document.getElementById(`out-${id}`);
 
       if (rawValue === "") {
-        outputDiv.innerHTML = "Enter a valid number to see conversions.";
+        outputDiv.innerHTML = "Awaiting input...";
+        outputDiv.className = "mt-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-indigo-900 rounded-lg min-h-[100px] flex items-center justify-center text-slate-500 dark:text-indigo-400 text-lg transition-colors";
         return;
       }
 
       let isValid = false;
-      if (base === 2) isValid = /^[01]+$/.test(rawValue);
-      if (base === 8) isValid = /^[0-7]+$/.test(rawValue);
-      if (base === 10) isValid = /^[0-9]+$/.test(rawValue);
-      if (base === 16) isValid = /^[0-9a-fA-F]+$/.test(rawValue);
+      if (inBase === 2) isValid = /^[01]+$/.test(rawValue);
+      if (inBase === 8) isValid = /^[0-7]+$/.test(rawValue);
+      if (inBase === 10) isValid = /^[0-9]+$/.test(rawValue);
+      if (inBase === 16) isValid = /^[0-9a-fA-F]+$/.test(rawValue);
 
       if (!isValid) {
-        outputDiv.innerHTML = "<span class='text-red-500 font-bold'>Invalid input for the selected number system.</span>";
+        outputDiv.innerHTML = "<span class='text-red-600 dark:text-red-400 font-bold'>Invalid input for the selected source base.</span>";
+        outputDiv.className = "mt-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-indigo-900 rounded-lg min-h-[100px] flex items-center justify-center transition-colors";
         return;
       }
 
-      const decimalValue = parseInt(rawValue, base);
+      let bigValue;
+      try {
+        if (inBase === 2) bigValue = BigInt("0b" + rawValue);
+        else if (inBase === 8) bigValue = BigInt("0o" + rawValue);
+        else if (inBase === 10) bigValue = BigInt(rawValue);
+        else if (inBase === 16) bigValue = BigInt("0x" + rawValue);
+      } catch (e) {
+        outputDiv.innerHTML = "<span class='text-red-600 dark:text-red-400 font-bold'>Number is too large or invalid.</span>";
+        outputDiv.className = "mt-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-indigo-900 rounded-lg min-h-[100px] flex items-center justify-center transition-colors";
+        return;
+      }
       
-      const binaryStr = decimalValue.toString(2);
-      const octalStr = decimalValue.toString(8);
-      const decimalStr = decimalValue.toString(10);
-      const hexStr = decimalValue.toString(16).toUpperCase();
+      const binaryStr = bigValue.toString(2);
+      const octalStr = bigValue.toString(8);
+      const decimalStr = bigValue.toString(10);
+      const hexStr = bigValue.toString(16).toUpperCase();
 
       outputDiv.innerHTML = `
-        <div class="grid grid-cols-2 gap-2 text-lg">
-          <div><span class="font-bold text-slate-800">Binary:</span> ${binaryStr}</div>
-          <div><span class="font-bold text-slate-800">Octal:</span> ${octalStr}</div>
-          <div><span class="font-bold text-slate-800">Decimal:</span> ${decimalStr}</div>
-          <div><span class="font-bold text-slate-800">Hexadecimal:</span> ${hexStr}</div>
+        <div class="grid grid-cols-2 gap-4 w-full">
+          <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-indigo-800 min-w-0 flex flex-col max-h-48">
+            <span class="block text-sm font-semibold text-slate-500 dark:text-indigo-400 mb-2 shrink-0">Binary</span>
+            <div class="overflow-y-auto pr-2"><span class="text-xl md:text-2xl font-mono font-bold text-indigo-700 dark:text-purple-300 break-all">${binaryStr}</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-indigo-800 min-w-0 flex flex-col max-h-48">
+            <span class="block text-sm font-semibold text-slate-500 dark:text-indigo-400 mb-2 shrink-0">Octal</span>
+            <div class="overflow-y-auto pr-2"><span class="text-xl md:text-2xl font-mono font-bold text-indigo-700 dark:text-purple-300 break-all">${octalStr}</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-indigo-800 min-w-0 flex flex-col max-h-48">
+            <span class="block text-sm font-semibold text-slate-500 dark:text-indigo-400 mb-2 shrink-0">Decimal</span>
+            <div class="overflow-y-auto pr-2"><span class="text-xl md:text-2xl font-mono font-bold text-indigo-700 dark:text-purple-300 break-all">${decimalStr}</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-indigo-800 min-w-0 flex flex-col max-h-48">
+            <span class="block text-sm font-semibold text-slate-500 dark:text-indigo-400 mb-2 shrink-0">Hexadecimal</span>
+            <div class="overflow-y-auto pr-2"><span class="text-xl md:text-2xl font-mono font-bold text-indigo-700 dark:text-purple-300 break-all">${hexStr}</span></div>
+          </div>
         </div>
       `;
+      outputDiv.className = "mt-4 p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-indigo-900 rounded-lg min-h-[100px] transition-colors";
     }
+
+    addCase();
   </script>
 
 </body>
