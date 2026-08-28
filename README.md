@@ -81,6 +81,7 @@ START PROGRAM
     TOGGLE "dark" CLASS ON document root
   END FUNCTION
 END PROGRAM
+```
 
 ### Flowchart
 ```mermaid
