@@ -454,3 +454,17 @@ graph TD
 2. Global Operation: Division (÷)
 3. Expected Output: Equation correctly identifies `(1000000)₂ ÷ (20)₈ ÷ (2)₁₆`. 
 4. Final arithmetic Result: Binary: `10`, Octal: `2`, Decimal: `2`, Hexadecimal: `2`.
+
+**Code Screenshots**
+
+![Code-SS-1](code-snippets/ss-1.png)
+![Code-SS-2](code-snippets/ss-2.png)
+![Code-SS-3](code-snippets/ss-3.png)
+![Code-SS-4](code-snippets/ss-4.png)
+![Code-SS-5](code-snippets/ss-5.png)
+![Code-SS-6](code-snippets/ss-6.png)
+![Code-SS-7](code-snippets/ss-7.png)
+![Code-SS-8](code-snippets/ss-8.png)
+![Code-SS-9](code-snippets/ss-9.png)
+![Code-SS-10](code-snippets/ss-10.png)
+![Code-SS-11](code-snippets/ss-11.png)
