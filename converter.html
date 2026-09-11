@@ -42,13 +42,9 @@
       <h1 class="text-3xl md:text-4xl font-extrabold mb-8 text-center text-indigo-700 dark:text-purple-400 font-mono tracking-tight">System Converter & Calculator</h1>
       
       <div class="mb-8 p-6 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl">
-        <label class="block text-lg font-bold text-indigo-800 dark:text-purple-300 mb-3 text-center">Select Arithmetic Operation</label>
-        <select id="global-operation" class="w-full md:w-1/2 mx-auto block bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 p-4 rounded-lg text-xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:ring-4 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors shadow-sm" onchange="calculateTotal()">
-          <option value="add">Addition (+)</option>
-          <option value="sub">Subtraction (-)</option>
-          <option value="mul">Multiplication (×)</option>
-          <option value="div">Division (÷)</option>
-        </select>
+        <label class="block text-lg font-bold text-indigo-800 dark:text-purple-300 mb-3 text-center">Arithmetic Expression</label>
+        <p class="text-sm text-center text-indigo-600 dark:text-indigo-400 mb-4">Use variables (A, B, C...) and operators (+, -, *, /, parentheses). Example: <strong>(A + B - C) * D</strong></p>
+        <input type="text" id="math-expression" class="w-full md:w-3/4 mx-auto block bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 p-4 rounded-lg text-2xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:ring-4 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors shadow-sm uppercase tracking-widest" placeholder="A + B + C" value="A + B + C" oninput="calculateTotal()">
       </div>
 
       <div id="cases-container" class="grid grid-cols-1 gap-6">
@@ -65,7 +61,7 @@
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
         <h2 class="text-2xl font-bold text-white mb-6 text-center">Final Arithmetic Result</h2>
         <div id="final-total-container" class="text-center">
-          <p class="text-slate-400 text-lg">Enter valid numbers in all fields above to compute the final result.</p>
+          <p class="text-slate-400 text-lg">Enter valid numbers and a proper expression above to compute the result.</p>
         </div>
       </div>
 
@@ -79,11 +75,42 @@
       document.documentElement.classList.toggle('dark');
     }
 
+    // Advanced Parser for Fractional Numbers across Base Systems
+    function parseToDecimal(str, base) {
+      const isNegative = str.startsWith('-');
+      const cleanStr = str.replace('-', '');
+      const parts = cleanStr.split('.');
+
+      let intPart = parseInt(parts[0] || '0', base);
+      let fracPart = 0;
+
+      if (parts.length > 1) {
+        let fracStr = parts[1];
+        let divisor = base;
+        for (let i = 0; i < fracStr.length; i++) {
+          fracPart += parseInt(fracStr[i], base) / divisor;
+          divisor *= base;
+        }
+      }
+
+      let total = intPart + fracPart;
+      return isNegative ? -total : total;
+    }
+
+    // Formatter to standardize output format
+    function formatBase(num, base) {
+      if (isNaN(num)) return "NaN";
+      const isNeg = num < 0;
+      const absVal = Math.abs(num);
+      let str = absVal.toString(base).toUpperCase();
+      return (isNeg ? '-' : '') + str;
+    }
+
     function createCaseHTML(id) {
       return `
-        <div id="case-${id}" class="p-6 border border-slate-200 dark:border-indigo-800 rounded-xl bg-slate-50 dark:bg-slate-800 relative shadow-sm dark:shadow-inner transition-colors duration-300">
+        <div id="case-${id}" data-var="" class="p-6 border border-slate-200 dark:border-indigo-800 rounded-xl bg-slate-50 dark:bg-slate-800 relative shadow-sm dark:shadow-inner transition-colors duration-300">
           <div class="flex justify-between items-center mb-4">
-            <label class="font-bold text-lg text-indigo-800 dark:text-purple-300">Input ${id}</label>
+            <label class="case-label font-bold text-xl text-indigo-800 dark:text-purple-300 bg-indigo-100 dark:bg-indigo-900/50 px-4 py-1 rounded-full border border-indigo-200 dark:border-indigo-700">Input</label>
             <button onclick="removeCase(${id})" class="remove-btn p-2 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg hidden transition-colors focus:outline-none" title="Remove Input">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -114,10 +141,23 @@
       `;
     }
 
+    function reindexLabels() {
+      const cases = document.querySelectorAll('[id^="case-"]');
+      cases.forEach((caseEl, index) => {
+        const varLetter = String.fromCharCode(65 + index); // 0 = A, 1 = B, etc.
+        caseEl.setAttribute('data-var', varLetter);
+        const labelEl = caseEl.querySelector('.case-label');
+        if (labelEl) {
+          labelEl.textContent = `Input ${varLetter}`;
+        }
+      });
+    }
+
     function addCase() {
       caseCounter++;
       const container = document.getElementById('cases-container');
       container.insertAdjacentHTML('beforeend', createCaseHTML(caseCounter));
+      reindexLabels();
       updateRemoveButtons();
       calculateTotal();
     }
@@ -126,6 +166,7 @@
       const caseEl = document.getElementById(`case-${id}`);
       if (caseEl && document.querySelectorAll('[id^="case-"]').length > 2) {
         caseEl.remove();
+        reindexLabels();
         updateRemoveButtons();
         calculateTotal();
       }
@@ -156,11 +197,12 @@
         return;
       }
 
+      // Regex updated to support optional fractional parts (decimals)
       let isValid = false;
-      if (inBase === 2) isValid = /^-?[01]+$/.test(rawValue);
-      if (inBase === 8) isValid = /^-?[0-7]+$/.test(rawValue);
-      if (inBase === 10) isValid = /^-?[0-9]+$/.test(rawValue);
-      if (inBase === 16) isValid = /^-?[0-9a-fA-F]+$/.test(rawValue);
+      if (inBase === 2) isValid = /^-?[01]+(\.[01]+)?$/.test(rawValue);
+      if (inBase === 8) isValid = /^-?[0-7]+(\.[0-7]+)?$/.test(rawValue);
+      if (inBase === 10) isValid = /^-?[0-9]+(\.[0-9]+)?$/.test(rawValue);
+      if (inBase === 16) isValid = /^-?[0-9a-fA-F]+(\.[0-9a-fA-F]+)?$/.test(rawValue);
 
       if (!isValid) {
         outputDiv.innerHTML = "<span class='text-red-600 dark:text-red-400 font-bold'>Invalid input for selected base.</span>";
@@ -168,24 +210,12 @@
         return;
       }
 
-      let bigValue;
-      try {
-        let cleanVal = rawValue.replace('-', '');
-        let prefix = inBase === 2 ? '0b' : inBase === 8 ? '0o' : inBase === 16 ? '0x' : '';
-        bigValue = BigInt((rawValue.startsWith('-') ? '-' : '') + prefix + cleanVal);
-      } catch (e) {
-        outputDiv.innerHTML = "<span class='text-red-600 dark:text-red-400 font-bold'>Number error.</span>";
-        return;
-      }
-      
-      const isNeg = bigValue < 0n;
-      const absVal = isNeg ? -bigValue : bigValue;
-      const sign = isNeg ? '-' : '';
+      let decValue = parseToDecimal(rawValue, inBase);
 
-      const binStr = sign + absVal.toString(2);
-      const octStr = sign + absVal.toString(8);
-      const decStr = bigValue.toString(10);
-      const hexStr = sign + absVal.toString(16).toUpperCase();
+      const binStr = formatBase(decValue, 2);
+      const octStr = formatBase(decValue, 8);
+      const decStr = formatBase(decValue, 10);
+      const hexStr = formatBase(decValue, 16);
 
       outputDiv.innerHTML = `
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
@@ -210,16 +240,42 @@
       outputDiv.className = "mt-4 p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-indigo-900 rounded-lg min-h-[80px] transition-colors";
     }
 
+    function evaluatePostfix(postfix, variables) {
+      const valStack = [];
+      for (let token of postfix) {
+        if (typeof token === 'number') {
+          valStack.push(token);
+        } else if (variables.hasOwnProperty(token)) {
+          valStack.push(variables[token]);
+        } else {
+          if (valStack.length < 2) throw new Error("Invalid expression syntax.");
+          const b = valStack.pop();
+          const a = valStack.pop();
+          if (token === '+') valStack.push(a + b);
+          else if (token === '-') valStack.push(a - b);
+          else if (token === '*') valStack.push(a * b);
+          else if (token === '/') {
+            if (b === 0) throw new Error("Division by zero error.");
+            valStack.push(a / b);
+          }
+        }
+      }
+      if (valStack.length !== 1) throw new Error("Invalid expression syntax.");
+      return valStack[0];
+    }
+
     function calculateTotal() {
       const cases = document.querySelectorAll('[id^="case-"]');
       const totalDiv = document.getElementById('final-total-container');
+      const exprString = document.getElementById('math-expression').value.trim().toUpperCase();
       
-      let values = [];
-      let expressions = [];
+      let variables = {};
+      let displayStrs = {};
       let allValid = true;
 
       cases.forEach(caseEl => {
         const id = caseEl.id.split('-')[1];
+        const varName = caseEl.getAttribute('data-var');
         const rawValue = document.getElementById(`val-${id}`).value.trim();
         const inBase = parseInt(document.getElementById(`inBase-${id}`).value);
 
@@ -229,90 +285,118 @@
         }
 
         let isValid = false;
-        if (inBase === 2) isValid = /^-?[01]+$/.test(rawValue);
-        if (inBase === 8) isValid = /^-?[0-7]+$/.test(rawValue);
-        if (inBase === 10) isValid = /^-?[0-9]+$/.test(rawValue);
-        if (inBase === 16) isValid = /^-?[0-9a-fA-F]+$/.test(rawValue);
+        if (inBase === 2) isValid = /^-?[01]+(\.[01]+)?$/.test(rawValue);
+        if (inBase === 8) isValid = /^-?[0-7]+(\.[0-7]+)?$/.test(rawValue);
+        if (inBase === 10) isValid = /^-?[0-9]+(\.[0-9]+)?$/.test(rawValue);
+        if (inBase === 16) isValid = /^-?[0-9a-fA-F]+(\.[0-9a-fA-F]+)?$/.test(rawValue);
 
         if (!isValid) {
           allValid = false;
           return;
         }
 
-        try {
-          let cleanVal = rawValue.replace('-', '');
-          let prefix = inBase === 2 ? '0b' : inBase === 8 ? '0o' : inBase === 16 ? '0x' : '';
-          let bigVal = BigInt((rawValue.startsWith('-') ? '-' : '') + prefix + cleanVal);
-          values.push(bigVal);
+        let decValue = parseToDecimal(rawValue, inBase);
+        variables[varName] = decValue;
 
-          const sub = inBase === 2 ? '₂' : inBase === 8 ? '₈' : inBase === 10 ? '₁₀' : '₁₆';
-          expressions.push(`(${rawValue})${sub}`);
-        } catch (e) {
-          allValid = false;
-        }
+        const sub = inBase === 2 ? '₂' : inBase === 8 ? '₈' : inBase === 10 ? '₁₀' : '₁₆';
+        displayStrs[varName] = `(${rawValue})${sub}`;
       });
 
-      if (values.length < 2 || !allValid) {
-        totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Enter valid numbers in all active fields to compute the final result.</p>";
+      if (!allValid || Object.keys(variables).length === 0) {
+        totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Enter valid numbers in all active fields to compute.</p>";
+        return;
+      }
+      
+      if (!exprString) {
+        totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Please enter a mathematical expression.</p>";
         return;
       }
 
-      const operation = document.getElementById('global-operation').value;
-      let opSymbol = operation === 'add' ? '+' : operation === 'sub' ? '-' : operation === 'mul' ? '×' : '÷';
+      // Regex updated to parse direct decimal numbers typed in the expression field
+      const tokens = exprString.match(/[A-Z]+|[0-9]*\.?[0-9]+|[+\-*/()]/g);
+      if (!tokens) {
+        totalDiv.innerHTML = "<p class='text-red-400 text-xl font-bold'>Error: Invalid characters in expression.</p>";
+        return;
+      }
 
-      let finalResult = values[0];
+      const precedence = { '+': 1, '-': 1, '*': 2, '/': 2 };
+      const postfix = [];
+      const opStack = [];
+      let formattedEqTokens = [];
+
       try {
-        for (let i = 1; i < values.length; i++) {
-          if (operation === 'add') finalResult += values[i];
-          else if (operation === 'sub') finalResult -= values[i];
-          else if (operation === 'mul') finalResult *= values[i];
-          else if (operation === 'div') {
-            if (values[i] === 0n) throw new Error("Division by zero");
-            finalResult /= values[i]; 
+        for (let token of tokens) {
+          if (variables.hasOwnProperty(token)) {
+            postfix.push(token);
+            formattedEqTokens.push(`<span class="text-white">${displayStrs[token]}</span>`);
+          } else if (/^[0-9]*\.?[0-9]+$/.test(token)) {
+            postfix.push(Number(token));
+            formattedEqTokens.push(`<span class="text-white">${token}</span>`);
+          } else if (['+', '-', '*', '/'].includes(token)) {
+            let symbol = token === '*' ? '×' : token === '/' ? '÷' : token;
+            formattedEqTokens.push(`<span class="text-pink-400 mx-1">${symbol}</span>`);
+            while (opStack.length > 0 && opStack[opStack.length - 1] !== '(' &&
+                   precedence[opStack[opStack.length - 1]] >= precedence[token]) {
+              postfix.push(opStack.pop());
+            }
+            opStack.push(token);
+          } else if (token === '(') {
+            formattedEqTokens.push(`<span class="text-indigo-400">(</span>`);
+            opStack.push(token);
+          } else if (token === ')') {
+            formattedEqTokens.push(`<span class="text-indigo-400">)</span>`);
+            while (opStack.length > 0 && opStack[opStack.length - 1] !== '(') {
+              postfix.push(opStack.pop());
+            }
+            if (opStack.length === 0) throw new Error("Mismatched parentheses.");
+            opStack.pop(); 
+          } else {
+            throw new Error(`Unknown variable: ${token}`);
           }
         }
+        while (opStack.length > 0) {
+          const op = opStack.pop();
+          if (op === '(' || op === ')') throw new Error("Mismatched parentheses.");
+          postfix.push(op);
+        }
+
+        const finalResult = evaluatePostfix(postfix, variables);
+
+        const binStr = formatBase(finalResult, 2);
+        const octStr = formatBase(finalResult, 8);
+        const decStr = formatBase(finalResult, 10);
+        const hexStr = formatBase(finalResult, 16);
+
+        totalDiv.innerHTML = `
+          <div class="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-inner overflow-x-auto">
+            <p class="text-indigo-300 text-sm font-bold uppercase tracking-wider mb-2">Equation Breakdown</p>
+            <p class="text-xl md:text-2xl font-mono whitespace-nowrap">${formattedEqTokens.join('')} <span class="text-pink-400 mx-2">=</span></p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-slate-400 mb-1">Binary</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-green-400 break-all">${binStr}</span></div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-slate-400 mb-1">Octal</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-blue-400 break-all">${octStr}</span></div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-slate-400 mb-1">Decimal</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-yellow-400 break-all">${decStr}</span></div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-slate-400 mb-1">Hexadecimal</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-pink-400 break-all">${hexStr}</span></div>
+            </div>
+          </div>
+        `;
       } catch (err) {
         totalDiv.innerHTML = `<p class='text-red-400 text-xl font-bold'>Error: ${err.message}</p>`;
-        return;
       }
-
-      const isNeg = finalResult < 0n;
-      const absRes = isNeg ? -finalResult : finalResult;
-      const sign = isNeg ? '-' : '';
-
-      const binStr = sign + absRes.toString(2);
-      const octStr = sign + absRes.toString(8);
-      const decStr = finalResult.toString(10);
-      const hexStr = sign + absRes.toString(16).toUpperCase();
-
-      totalDiv.innerHTML = `
-        <div class="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-inner overflow-x-auto">
-          <p class="text-indigo-300 text-sm font-bold uppercase tracking-wider mb-2">Equation</p>
-          <p class="text-xl md:text-2xl font-mono text-white whitespace-nowrap">${expressions.join(` <span class="text-pink-400 mx-2">${opSymbol}</span> `)} <span class="text-pink-400 mx-2">=</span></p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
-            <span class="block text-sm font-bold text-slate-400 mb-1">Binary</span>
-            <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-green-400 break-all">${binStr}</span></div>
-          </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
-            <span class="block text-sm font-bold text-slate-400 mb-1">Octal</span>
-            <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-blue-400 break-all">${octStr}</span></div>
-          </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
-            <span class="block text-sm font-bold text-slate-400 mb-1">Decimal</span>
-            <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-yellow-400 break-all">${decStr}</span></div>
-          </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
-            <span class="block text-sm font-bold text-slate-400 mb-1">Hexadecimal</span>
-            <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-pink-400 break-all">${hexStr}</span></div>
-          </div>
-        </div>
-      `;
     }
 
-    // Initialize with 3 inputs per instructions
     addCase();
     addCase();
     addCase();

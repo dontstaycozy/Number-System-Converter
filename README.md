@@ -11,18 +11,19 @@
 
 ### Algorithm
 1. Start the program.
-2. Initialize the user interface with three default input cases and a global arithmetic operation selector.
-3. Allow the user to select an arithmetic operation (Addition, Subtraction, Multiplication, Division).
-4. Prompt the user to enter a number and select its corresponding base (Binary, Octal, Decimal, Hexadecimal) for each input field.
-5. Validate each input string against the allowed characters for its selected base.
+2. Initialize the user interface with three default input cases and a custom arithmetic expression field.
+3. Dynamically assign a sequential alphabetical variable (A, B, C...) to each input case.
+4. Prompt the user to enter a number and select its corresponding base (Binary, Octal, Decimal, Hexadecimal) for each active input.
+5. Validate each input string against the allowed characters for its selected base, including support for fractional floating-point values.
 6. Display individual conversion results (Binary, Octal, Decimal, Hexadecimal) for each valid input block.
-7. Convert all valid input strings into a common representation (`BigInt`) to maintain mathematical precision across mixed bases.
-8. Perform the selected arithmetic operation sequentially on the converted `BigInt` values.
-9. Construct and display the mathematical expression using the original input values and their base subscripts.
-10. Display the final computed result in Binary, Octal, Decimal, and Hexadecimal formats.
-11. Handle invalid inputs, empty fields, and mathematical errors (like division by zero) by displaying appropriate error messages.
-12. Allow the user to dynamically add or remove input cases via interface buttons.
-13. End the program.
+7. Convert all valid input strings into a standard decimal numeric format using a custom fractional parser and map them to their assigned alphabetical variables.
+8. Read the custom arithmetic expression input by the user (e.g., `A + B * C`).
+9. Parse the expression using the Shunting-yard algorithm to convert it from infix to postfix notation, enforcing strict operator precedence and parenthetical grouping logic.
+10. Evaluate the postfix array using a stack and the mapped numeric decimal variables.
+11. Display the formatted equation breakdown and the final computed arithmetic result in Binary, Octal, Decimal, and Hexadecimal formats.
+12. Automatically recalculate and reassign variables (preventing alphabetical gaps) if the user dynamically adds or removes input cases.
+13. Handle and display explicit errors for invalid inputs, syntax errors, mismatched parentheses, unassigned variables, or mathematical impossibilities (division by zero).
+14. End the program.
 
 ### Pseudocode
 ```text
@@ -30,34 +31,56 @@ START PROGRAM
   SET caseCounter = 0
   CALL addCase() THREE TIMES to render initial interface
 
+  FUNCTION reindexLabels()
+    FOR EACH active case container:
+      ASSIGN sequential letter (A, B, C...) based on index
+    END FOR
+  END FUNCTION
+
   FUNCTION calculateTotal()
-    READ globalOperation FROM selector (add, sub, mul, div)
-    SET valuesArray = []
-    SET expressionsArray = []
+    READ exprString FROM math-expression input
+    SET variables = EMPTY MAP
     
     FOR EACH active case container:
       READ rawValue AND inBase
       IF rawValue IS INVALID THEN ABORT AND DISPLAY ERROR
       
-      SET bigValue = CONVERT rawValue TO BigInt USING inBase
-      APPEND bigValue TO valuesArray
-      APPEND formatted original string with base subscript TO expressionsArray
+      SET decValue = CUSTOM PARSE rawValue TO Decimal INCLUDING FRACTIONS
+      STORE decValue IN variables[assignedLetter]
     END FOR
     
-    IF valuesArray LENGTH < 2 THEN RETURN
+    IF variables IS EMPTY OR exprString IS EMPTY THEN RETURN
 
-    SET finalResult = valuesArray[0]
-    FOR i = 1 TO valuesArray LENGTH - 1:
-      IF globalOperation == 'add' THEN finalResult = finalResult + valuesArray[i]
-      IF globalOperation == 'sub' THEN finalResult = finalResult - valuesArray[i]
-      IF globalOperation == 'mul' THEN finalResult = finalResult * valuesArray[i]
-      IF globalOperation == 'div' THEN 
-        IF valuesArray[i] == 0 THEN DISPLAY ERROR "Division by zero" AND ABORT
-        finalResult = finalResult / valuesArray[i]
-    END FOR
-    
-    DISPLAY expressionsArray AS Equation
-    DISPLAY CONVERT finalResult TO Base 2, 8, 10, 16 IN Final Output Grid
+    TRY
+      SET tokens = EXTRACT variables, numbers, operators, parentheses FROM exprString
+      SET postfix = []
+      SET opStack = []
+      
+      // Shunting-yard Algorithm
+      FOR EACH token IN tokens:
+        IF token IS variable OR number:
+          PUSH token TO postfix
+        ELSE IF token IS operator (+, -, *, /):
+          WHILE top of opStack has higher or equal precedence:
+            PUSH popped opStack TO postfix
+          PUSH token TO opStack
+        ELSE IF token IS '(':
+          PUSH token TO opStack
+        ELSE IF token IS ')':
+          WHILE top of opStack IS NOT '(':
+            PUSH popped opStack TO postfix
+          POP '(' FROM opStack
+      END FOR
+      
+      WHILE opStack IS NOT EMPTY:
+        PUSH popped opStack TO postfix
+
+      SET finalResult = evaluatePostfix(postfix, variables)
+      DISPLAY formatted equation breakdown
+      DISPLAY CONVERT finalResult TO Base 2, 8, 10, 16 IN Final Output Grid
+    CATCH ERROR
+      DISPLAY explicit error message
+    END TRY
   END FUNCTION
 END PROGRAM
 ```
@@ -65,13 +88,43 @@ END PROGRAM
 ### Flowchart
 ```mermaid
 graph TD
-  A[Start Program] --> B[Initialize UI with 3 Inputs & Operation Selector]
-  B --> C[Accept User Inputs and Base Selections]
-  C --> D[Validate Input Data per Base System]
-  D --> E[Display Individual Base Conversions]
-  E --> F[Convert All Valid Inputs to Common BigInt Base]
-  F --> G[Execute Selected Arithmetic Operation]
-  G --> H[Output Equation and Final Converted Results]
+  Start((User Types Number or Formula)) --> Indiv[Process Each Input Box]
+
+  subgraph Individual Number Conversion
+    Indiv --> IsEmpty{Is the box empty?}
+    IsEmpty -- Yes --> Await[Display 'Awaiting input...']
+    IsEmpty -- No --> ValidChars{Are characters valid for selected base?}
+    ValidChars -- No --> ErrChars[Display 'Invalid input' Error]
+    ValidChars -- Yes --> ConvertNum[Convert to standard decimal value]
+    ConvertNum --> FormatIndiv[Display in Base 2, 8, 10, 16]
+  end
+
+  FormatIndiv --> CalcTotal[Start Final Math Calculation]
+  Await --> CalcTotal
+  ErrChars --> CalcTotal
+
+  subgraph Final Equation Processing
+    CalcTotal --> CheckAll{Are all numbers valid?}
+    CheckAll -- No --> WarnInputs[Display 'Enter valid numbers' warning]
+    CheckAll -- Yes --> ReadExpr[Check Arithmetic Expression Box]
+
+    ReadExpr --> IsExprEmpty{Is formula missing?}
+    IsExprEmpty -- Yes --> WarnExpr[Display 'Please enter expression']
+    IsExprEmpty -- No --> ReadSymbols[Break formula into letters and symbols]
+
+    ReadSymbols --> ValidTokens{Are the symbols allowed?}
+    ValidTokens -- No --> ErrToken[Display 'Invalid characters' Error]
+    ValidTokens -- Yes --> MathRules[Apply Math Rules / PEMDAS]
+
+    MathRules --> TryEval{Are parentheses matched & formula logical?}
+    TryEval -- No --> ErrSyntax[Display 'Syntax Error']
+    TryEval -- Yes --> Eval[Calculate the Answer]
+
+    Eval --> DivZero{Is it dividing by zero?}
+    DivZero -- Yes --> ErrDiv[Display 'Division by zero' Error]
+    DivZero -- No --> FinalConvert[Convert Final Answer to Base 2, 8, 10, 16]
+    FinalConvert --> Output[Show Equation Breakdown & Final Results Grid]
+  end
 ```
 
 ### Program Implementation
@@ -120,16 +173,13 @@ graph TD
       <h1 class="text-3xl md:text-4xl font-extrabold mb-8 text-center text-indigo-700 dark:text-purple-400 font-mono tracking-tight">System Converter & Calculator</h1>
       
       <div class="mb-8 p-6 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl">
-        <label class="block text-lg font-bold text-indigo-800 dark:text-purple-300 mb-3 text-center">Select Arithmetic Operation</label>
-        <select id="global-operation" class="w-full md:w-1/2 mx-auto block bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 p-4 rounded-lg text-xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:ring-4 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors shadow-sm" onchange="calculateTotal()">
-          <option value="add">Addition (+)</option>
-          <option value="sub">Subtraction (-)</option>
-          <option value="mul">Multiplication (×)</option>
-          <option value="div">Division (÷)</option>
-        </select>
+        <label class="block text-lg font-bold text-indigo-800 dark:text-purple-300 mb-3 text-center">Arithmetic Expression</label>
+        <p class="text-sm text-center text-indigo-600 dark:text-indigo-400 mb-4">Use variables (A, B, C...) and operators (+, -, *, /, parentheses). Example: <strong>(A + B - C) * D</strong></p>
+        <input type="text" id="math-expression" class="w-full md:w-3/4 mx-auto block bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 p-4 rounded-lg text-2xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:ring-4 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors shadow-sm uppercase tracking-widest" placeholder="A + B + C" value="A + B + C" oninput="calculateTotal()">
       </div>
 
       <div id="cases-container" class="grid grid-cols-1 gap-6">
+        <!-- Dynamic cases injected here -->
       </div>
 
       <div class="mt-6 text-center">
@@ -142,7 +192,7 @@ graph TD
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
         <h2 class="text-2xl font-bold text-white mb-6 text-center">Final Arithmetic Result</h2>
         <div id="final-total-container" class="text-center">
-          <p class="text-slate-400 text-lg">Enter valid numbers in all fields above to compute the final result.</p>
+          <p class="text-slate-400 text-lg">Enter valid numbers and a proper expression above to compute the result.</p>
         </div>
       </div>
 
@@ -156,11 +206,42 @@ graph TD
       document.documentElement.classList.toggle('dark');
     }
 
+    // Advanced Parser for Fractional Numbers across Base Systems
+    function parseToDecimal(str, base) {
+      const isNegative = str.startsWith('-');
+      const cleanStr = str.replace('-', '');
+      const parts = cleanStr.split('.');
+
+      let intPart = parseInt(parts[0] || '0', base);
+      let fracPart = 0;
+
+      if (parts.length > 1) {
+        let fracStr = parts[1];
+        let divisor = base;
+        for (let i = 0; i < fracStr.length; i++) {
+          fracPart += parseInt(fracStr[i], base) / divisor;
+          divisor *= base;
+        }
+      }
+
+      let total = intPart + fracPart;
+      return isNegative ? -total : total;
+    }
+
+    // Formatter to standardize output format
+    function formatBase(num, base) {
+      if (isNaN(num)) return "NaN";
+      const isNeg = num < 0;
+      const absVal = Math.abs(num);
+      let str = absVal.toString(base).toUpperCase();
+      return (isNeg ? '-' : '') + str;
+    }
+
     function createCaseHTML(id) {
       return `
-        <div id="case-${id}" class="p-6 border border-slate-200 dark:border-indigo-800 rounded-xl bg-slate-50 dark:bg-slate-800 relative shadow-sm dark:shadow-inner transition-colors duration-300">
+        <div id="case-${id}" data-var="" class="p-6 border border-slate-200 dark:border-indigo-800 rounded-xl bg-slate-50 dark:bg-slate-800 relative shadow-sm dark:shadow-inner transition-colors duration-300">
           <div class="flex justify-between items-center mb-4">
-            <label class="font-bold text-lg text-indigo-800 dark:text-purple-300">Input ${id}</label>
+            <label class="case-label font-bold text-xl text-indigo-800 dark:text-purple-300 bg-indigo-100 dark:bg-indigo-900/50 px-4 py-1 rounded-full border border-indigo-200 dark:border-indigo-700">Input</label>
             <button onclick="removeCase(${id})" class="remove-btn p-2 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg hidden transition-colors focus:outline-none" title="Remove Input">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -191,10 +272,23 @@ graph TD
       `;
     }
 
+    function reindexLabels() {
+      const cases = document.querySelectorAll('[id^="case-"]');
+      cases.forEach((caseEl, index) => {
+        const varLetter = String.fromCharCode(65 + index); // 0 = A, 1 = B, etc.
+        caseEl.setAttribute('data-var', varLetter);
+        const labelEl = caseEl.querySelector('.case-label');
+        if (labelEl) {
+          labelEl.textContent = `Input ${varLetter}`;
+        }
+      });
+    }
+
     function addCase() {
       caseCounter++;
       const container = document.getElementById('cases-container');
       container.insertAdjacentHTML('beforeend', createCaseHTML(caseCounter));
+      reindexLabels();
       updateRemoveButtons();
       calculateTotal();
     }
@@ -203,6 +297,7 @@ graph TD
       const caseEl = document.getElementById(`case-${id}`);
       if (caseEl && document.querySelectorAll('[id^="case-"]').length > 2) {
         caseEl.remove();
+        reindexLabels();
         updateRemoveButtons();
         calculateTotal();
       }
@@ -233,11 +328,12 @@ graph TD
         return;
       }
 
+      // Regex updated to support optional fractional parts (decimals)
       let isValid = false;
-      if (inBase === 2) isValid = /^-?[01]+$/.test(rawValue);
-      if (inBase === 8) isValid = /^-?[0-7]+$/.test(rawValue);
-      if (inBase === 10) isValid = /^-?[0-9]+$/.test(rawValue);
-      if (inBase === 16) isValid = /^-?[0-9a-fA-F]+$/.test(rawValue);
+      if (inBase === 2) isValid = /^-?[01]+(\.[01]+)?$/.test(rawValue);
+      if (inBase === 8) isValid = /^-?[0-7]+(\.[0-7]+)?$/.test(rawValue);
+      if (inBase === 10) isValid = /^-?[0-9]+(\.[0-9]+)?$/.test(rawValue);
+      if (inBase === 16) isValid = /^-?[0-9a-fA-F]+(\.[0-9a-fA-F]+)?$/.test(rawValue);
 
       if (!isValid) {
         outputDiv.innerHTML = "<span class='text-red-600 dark:text-red-400 font-bold'>Invalid input for selected base.</span>";
@@ -245,24 +341,12 @@ graph TD
         return;
       }
 
-      let bigValue;
-      try {
-        let cleanVal = rawValue.replace('-', '');
-        let prefix = inBase === 2 ? '0b' : inBase === 8 ? '0o' : inBase === 16 ? '0x' : '';
-        bigValue = BigInt((rawValue.startsWith('-') ? '-' : '') + prefix + cleanVal);
-      } catch (e) {
-        outputDiv.innerHTML = "<span class='text-red-600 dark:text-red-400 font-bold'>Number error.</span>";
-        return;
-      }
-      
-      const isNeg = bigValue < 0n;
-      const absVal = isNeg ? -bigValue : bigValue;
-      const sign = isNeg ? '-' : '';
+      let decValue = parseToDecimal(rawValue, inBase);
 
-      const binStr = sign + absVal.toString(2);
-      const octStr = sign + absVal.toString(8);
-      const decStr = bigValue.toString(10);
-      const hexStr = sign + absVal.toString(16).toUpperCase();
+      const binStr = formatBase(decValue, 2);
+      const octStr = formatBase(decValue, 8);
+      const decStr = formatBase(decValue, 10);
+      const hexStr = formatBase(decValue, 16);
 
       outputDiv.innerHTML = `
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
@@ -287,16 +371,42 @@ graph TD
       outputDiv.className = "mt-4 p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-indigo-900 rounded-lg min-h-[80px] transition-colors";
     }
 
+    function evaluatePostfix(postfix, variables) {
+      const valStack = [];
+      for (let token of postfix) {
+        if (typeof token === 'number') {
+          valStack.push(token);
+        } else if (variables.hasOwnProperty(token)) {
+          valStack.push(variables[token]);
+        } else {
+          if (valStack.length < 2) throw new Error("Invalid expression syntax.");
+          const b = valStack.pop();
+          const a = valStack.pop();
+          if (token === '+') valStack.push(a + b);
+          else if (token === '-') valStack.push(a - b);
+          else if (token === '*') valStack.push(a * b);
+          else if (token === '/') {
+            if (b === 0) throw new Error("Division by zero error.");
+            valStack.push(a / b);
+          }
+        }
+      }
+      if (valStack.length !== 1) throw new Error("Invalid expression syntax.");
+      return valStack[0];
+    }
+
     function calculateTotal() {
       const cases = document.querySelectorAll('[id^="case-"]');
       const totalDiv = document.getElementById('final-total-container');
+      const exprString = document.getElementById('math-expression').value.trim().toUpperCase();
       
-      let values = [];
-      let expressions = [];
+      let variables = {};
+      let displayStrs = {};
       let allValid = true;
 
       cases.forEach(caseEl => {
         const id = caseEl.id.split('-')[1];
+        const varName = caseEl.getAttribute('data-var');
         const rawValue = document.getElementById(`val-${id}`).value.trim();
         const inBase = parseInt(document.getElementById(`inBase-${id}`).value);
 
@@ -306,87 +416,116 @@ graph TD
         }
 
         let isValid = false;
-        if (inBase === 2) isValid = /^-?[01]+$/.test(rawValue);
-        if (inBase === 8) isValid = /^-?[0-7]+$/.test(rawValue);
-        if (inBase === 10) isValid = /^-?[0-9]+$/.test(rawValue);
-        if (inBase === 16) isValid = /^-?[0-9a-fA-F]+$/.test(rawValue);
+        if (inBase === 2) isValid = /^-?[01]+(\.[01]+)?$/.test(rawValue);
+        if (inBase === 8) isValid = /^-?[0-7]+(\.[0-7]+)?$/.test(rawValue);
+        if (inBase === 10) isValid = /^-?[0-9]+(\.[0-9]+)?$/.test(rawValue);
+        if (inBase === 16) isValid = /^-?[0-9a-fA-F]+(\.[0-9a-fA-F]+)?$/.test(rawValue);
 
         if (!isValid) {
           allValid = false;
           return;
         }
 
-        try {
-          let cleanVal = rawValue.replace('-', '');
-          let prefix = inBase === 2 ? '0b' : inBase === 8 ? '0o' : inBase === 16 ? '0x' : '';
-          let bigVal = BigInt((rawValue.startsWith('-') ? '-' : '') + prefix + cleanVal);
-          values.push(bigVal);
+        let decValue = parseToDecimal(rawValue, inBase);
+        variables[varName] = decValue;
 
-          const sub = inBase === 2 ? '₂' : inBase === 8 ? '₈' : inBase === 10 ? '₁₀' : '₁₆';
-          expressions.push(`(${rawValue})${sub}`);
-        } catch (e) {
-          allValid = false;
-        }
+        const sub = inBase === 2 ? '₂' : inBase === 8 ? '₈' : inBase === 10 ? '₁₀' : '₁₆';
+        displayStrs[varName] = `(${rawValue})${sub}`;
       });
 
-      if (values.length < 2 || !allValid) {
-        totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Enter valid numbers in all active fields to compute the final result.</p>";
+      if (!allValid || Object.keys(variables).length === 0) {
+        totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Enter valid numbers in all active fields to compute.</p>";
+        return;
+      }
+      
+      if (!exprString) {
+        totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Please enter a mathematical expression.</p>";
         return;
       }
 
-      const operation = document.getElementById('global-operation').value;
-      let opSymbol = operation === 'add' ? '+' : operation === 'sub' ? '-' : operation === 'mul' ? '×' : '÷';
+      // Regex updated to parse direct decimal numbers typed in the expression field
+      const tokens = exprString.match(/[A-Z]+|[0-9]*\.?[0-9]+|[+\-*/()]/g);
+      if (!tokens) {
+        totalDiv.innerHTML = "<p class='text-red-400 text-xl font-bold'>Error: Invalid characters in expression.</p>";
+        return;
+      }
 
-      let finalResult = values[0];
+      const precedence = { '+': 1, '-': 1, '*': 2, '/': 2 };
+      const postfix = [];
+      const opStack = [];
+      let formattedEqTokens = [];
+
       try {
-        for (let i = 1; i < values.length; i++) {
-          if (operation === 'add') finalResult += values[i];
-          else if (operation === 'sub') finalResult -= values[i];
-          else if (operation === 'mul') finalResult *= values[i];
-          else if (operation === 'div') {
-            if (values[i] === 0n) throw new Error("Division by zero");
-            finalResult /= values[i]; 
+        for (let token of tokens) {
+          if (variables.hasOwnProperty(token)) {
+            postfix.push(token);
+            formattedEqTokens.push(`<span class="text-white">${displayStrs[token]}</span>`);
+          } else if (/^[0-9]*\.?[0-9]+$/.test(token)) {
+            postfix.push(Number(token));
+            formattedEqTokens.push(`<span class="text-white">${token}</span>`);
+          } else if (['+', '-', '*', '/'].includes(token)) {
+            let symbol = token === '*' ? '×' : token === '/' ? '÷' : token;
+            formattedEqTokens.push(`<span class="text-pink-400 mx-1">${symbol}</span>`);
+            while (opStack.length > 0 && opStack[opStack.length - 1] !== '(' &&
+                   precedence[opStack[opStack.length - 1]] >= precedence[token]) {
+              postfix.push(opStack.pop());
+            }
+            opStack.push(token);
+          } else if (token === '(') {
+            formattedEqTokens.push(`<span class="text-indigo-400">(</span>`);
+            opStack.push(token);
+          } else if (token === ')') {
+            formattedEqTokens.push(`<span class="text-indigo-400">)</span>`);
+            while (opStack.length > 0 && opStack[opStack.length - 1] !== '(') {
+              postfix.push(opStack.pop());
+            }
+            if (opStack.length === 0) throw new Error("Mismatched parentheses.");
+            opStack.pop(); 
+          } else {
+            throw new Error(`Unknown variable: ${token}`);
           }
         }
+        while (opStack.length > 0) {
+          const op = opStack.pop();
+          if (op === '(' || op === ')') throw new Error("Mismatched parentheses.");
+          postfix.push(op);
+        }
+
+        const finalResult = evaluatePostfix(postfix, variables);
+
+        const binStr = formatBase(finalResult, 2);
+        const octStr = formatBase(finalResult, 8);
+        const decStr = formatBase(finalResult, 10);
+        const hexStr = formatBase(finalResult, 16);
+
+        totalDiv.innerHTML = `
+          <div class="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-inner overflow-x-auto">
+            <p class="text-indigo-300 text-sm font-bold uppercase tracking-wider mb-2">Equation Breakdown</p>
+            <p class="text-xl md:text-2xl font-mono whitespace-nowrap">${formattedEqTokens.join('')} <span class="text-pink-400 mx-2">=</span></p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-slate-400 mb-1">Binary</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-green-400 break-all">${binStr}</span></div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-slate-400 mb-1">Octal</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-blue-400 break-all">${octStr}</span></div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-slate-400 mb-1">Decimal</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-yellow-400 break-all">${decStr}</span></div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-slate-400 mb-1">Hexadecimal</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-pink-400 break-all">${hexStr}</span></div>
+            </div>
+          </div>
+        `;
       } catch (err) {
         totalDiv.innerHTML = `<p class='text-red-400 text-xl font-bold'>Error: ${err.message}</p>`;
-        return;
       }
-
-      const isNeg = finalResult < 0n;
-      const absRes = isNeg ? -finalResult : finalResult;
-      const sign = isNeg ? '-' : '';
-
-      const binStr = sign + absRes.toString(2);
-      const octStr = sign + absRes.toString(8);
-      const decStr = finalResult.toString(10);
-      const hexStr = sign + absRes.toString(16).toUpperCase();
-
-      totalDiv.innerHTML = `
-        <div class="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-inner overflow-x-auto">
-          <p class="text-indigo-300 text-sm font-bold uppercase tracking-wider mb-2">Equation</p>
-          <p class="text-xl md:text-2xl font-mono text-white whitespace-nowrap">${expressions.join(` <span class="text-pink-400 mx-2">${opSymbol}</span> `)} <span class="text-pink-400 mx-2">=</span></p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
-            <span class="block text-sm font-bold text-slate-400 mb-1">Binary</span>
-            <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-green-400 break-all">${binStr}</span></div>
-          </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
-            <span class="block text-sm font-bold text-slate-400 mb-1">Octal</span>
-            <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-blue-400 break-all">${octStr}</span></div>
-          </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
-            <span class="block text-sm font-bold text-slate-400 mb-1">Decimal</span>
-            <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-yellow-400 break-all">${decStr}</span></div>
-          </div>
-          <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
-            <span class="block text-sm font-bold text-slate-400 mb-1">Hexadecimal</span>
-            <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-pink-400 break-all">${hexStr}</span></div>
-          </div>
-        </div>
-      `;
     }
 
     addCase();
@@ -398,7 +537,8 @@ graph TD
 </html>
 ```
 
-#### Test Cases
+### Test Cases
+
 **Test Case 1: Binary Conversion**
 ![Sample-1](sample-outputs/Sample-Output-1.png)
 1. Input Value: 1010
@@ -415,7 +555,7 @@ graph TD
 ![Sample-3](sample-outputs/Sample-Output-3.png)
 1. Input Value: 9
 2. Selected Base: Octal (Base 8)
-3. Expected Output: "Invalid input for the selected number system." text appears in red.
+3. Expected Output: "Invalid input for selected base." text appears in red.
 
 **Test Case 4: Mathematical Bounds Limits**
 ![Sample-4](sample-outputs/Sample-Output-4.png)
@@ -423,37 +563,75 @@ graph TD
 2. Selected Base: Decimal (Base 10)
 3. Expected Output: Hexadecimal correctly outputs 56BC75E2D63100000 instead of converting the string into scientific notation.
 
-**Test Case 5: Binary + Octal + Decimal (Addition)**
+**Test Case 5: Operator Precedence (Binary + Octal + Decimal)**
 ![Sample-5](sample-outputs/Sample-Output-5.png)
-![Sample-5](sample-outputs/Sample-Output-5-1.png)
-1. Inputs: `1010` (Base 2), `12` (Base 8), `10` (Base 10)
-2. Global Operation: Addition (+)
-3. Expected Output: Equation correctly identifies `(1010)₂ + (12)₈ + (10)₁₀`. 
-4. Final arithmetic Result: Binary: `11110`, Octal: `36`, Decimal: `30`, Hexadecimal: `1E`.
+![Sample-5-1](sample-outputs/Sample-Output-5-1.png)
+1. Inputs: `Input A = 1010` (Base 2), `Input B = 20` (Base 8), `Input C = 2` (Base 10)
+2. Arithmetic Expression: `A + B * C`
+3. Expected Equation Breakdown: `(1010)₂ + (20)₈ × (2)₁₀` 
+4. Expected Logic: Multiplication executes before addition. `10 + (16 × 2) = 42`.
+5. Final Arithmetic Result: Binary: `101010`, Octal: `52`, Decimal: `42`, Hexadecimal: `2A`.
 
-**Test Case 6: Binary + Decimal + Hexadecimal (Subtraction)**
+**Test Case 6: Parenthetical Grouping (Binary + Decimal + Hexadecimal)**
 ![Sample-6](sample-outputs/Sample-Output-6.png)
-![Sample-6](sample-outputs/Sample-Output-6-1.png)
-1. Inputs: `1111` (Base 2), `15` (Base 10), `F` (Base 16)
-2. Global Operation: Subtraction (-)
-3. Expected Output: Equation correctly identifies `(1111)₂ - (15)₁₀ - (F)₁₆`. 
-4. Final arithmetic Result: Binary: `-1111`, Octal: `-17`, Decimal: `-15`, Hexadecimal: `-F`.
+![Sample-6-1](sample-outputs/Sample-Output-6-1.png)
+1. Inputs: `Input A = 10000` (Base 2), `Input B = 4` (Base 10), `Input C = 2` (Base 16)
+2. Arithmetic Expression: `(A - B) / C`
+3. Expected Equation Breakdown: `( (10000)₂ - (4)₁₀ ) ÷ (2)₁₆` 
+4. Expected Logic: Parentheses force subtraction before division. `(16 - 4) ÷ 2 = 6`.
+5. Final Arithmetic Result: Binary: `110`, Octal: `6`, Decimal: `6`, Hexadecimal: `6`.
 
-**Test Case 7: Octal + Decimal + Hexadecimal (Multiplication)**
+**Test Case 7: Mixed Operators (Octal + Decimal + Hexadecimal)**
 ![Sample-7](sample-outputs/Sample-Output-7.png)
-![Sample-7](sample-outputs/Sample-Output-7-1.png)
-1. Inputs: `2` (Base 8), `3` (Base 10), `4` (Base 16)
-2. Global Operation: Multiplication (×)
-3. Expected Output: Equation correctly identifies `(2)₈ × (3)₁₀ × (4)₁₆`. 
-4. Final arithmetic Result: Binary: `11000`, Octal: `30`, Decimal: `24`, Hexadecimal: `18`.
+![Sample-7-1](sample-outputs/Sample-Output-7-1.png)
+1. Inputs: `Input A = 12` (Base 8), `Input B = 5` (Base 10), `Input C = F` (Base 16)
+2. Arithmetic Expression: `A * B - C`
+3. Expected Equation Breakdown: `(12)₈ × (5)₁₀ - (F)₁₆` 
+4. Expected Logic: Multiplication executes before subtraction. `(10 × 5) - 15 = 35`.
+5. Final Arithmetic Result: Binary: `100011`, Octal: `43`, Decimal: `35`, Hexadecimal: `23`.
 
-**Test Case 8: Binary + Octal + Hexadecimal (Division)**
+**Test Case 8: Complex Multi-Variable Expression (Binary + Octal + Hexadecimal + Binary)**
 ![Sample-8](sample-outputs/Sample-Output-8.png)
-![Sample-8](sample-outputs/Sample-Output-8-1.png)
-1. Inputs: `1000000` (Base 2), `20` (Base 8), `2` (Base 16)
-2. Global Operation: Division (÷)
-3. Expected Output: Equation correctly identifies `(1000000)₂ ÷ (20)₈ ÷ (2)₁₆`. 
-4. Final arithmetic Result: Binary: `10`, Octal: `2`, Decimal: `2`, Hexadecimal: `2`.
+![Sample-8-1](sample-outputs/Sample-Output-8-1.png)
+1. Inputs: `Input A = 1100` (Base 2), `Input B = 10` (Base 8), `Input C = A` (Base 16), `Input D = 11` (Base 2)
+2. Arithmetic Expression: `(A + B - C) * D`
+3. Expected Equation Breakdown: `( (1100)₂ + (10)₈ - (A)₁₆ ) × (11)₂` 
+4. Expected Logic: Left-to-right inside parentheses, followed by multiplication. `(12 + 8 - 10) × 3 = 30`.
+5. Final Arithmetic Result: Binary: `11110`, Octal: `36`, Decimal: `30`, Hexadecimal: `1E`.
+
+**Test Case 9: Arithmetic Error Handling (Division by Zero)**
+![Sample-9](sample-outputs/Sample-Output-9.png)
+1. Inputs: `Input A = 25` (Base 10), `Input B = 0` (Base 2)
+2. Arithmetic Expression: `A / B`
+3. Expected Equation Breakdown: None.
+4. Expected Output: Red error message stating "Error: Division by zero error." prevents the calculation.
+
+**Test Case 10: Comprehensive Order of Operations (Mixed Bases)**
+![Sample-10](sample-outputs/Sample-Output-10.png)
+![Sample-10-1](sample-outputs/Sample-Output-10-1.png)
+1. Inputs: `Input A = 14` (Hexadecimal), `Input B = 101` (Binary), `Input C = 4` (Octal), `Input D = 8` (Hexadecimal), `Input E = 10` (Binary)
+2. Arithmetic Expression: `A + B * C - D / E`
+3. Expected Equation Breakdown: `(14)₁₆ + (101)₂ × (4)₈ - (8)₁₆ ÷ (10)₂`
+4. Expected Logic: Base conversions equate to (20 + 5 × 4 - 8 ÷ 2). Multiplication and division execute first `(5 × 4 = 20)` and `(8 ÷ 2 = 4)`, followed by addition and subtraction `(20 + 20 - 4) = 36`.
+5. Final Arithmetic Result: Binary: `100100`, Octal: `44`, Decimal: `36`, Hexadecimal: `24`.
+
+**Test Case 11: Fractional Input Calculation**
+![Sample-11](sample-outputs/Sample-Output-11.png)
+![Sample-11-1](sample-outputs/Sample-Output-11-1.png)
+1. Inputs: `Input A = 23.5` (Decimal), `Input B = 10` (Decimal)
+2. Arithmetic Expression: `A * B`
+3. Expected Equation Breakdown: `(23.5)₁₀ × (10)₁₀`
+4. Expected Logic: Multiplication of a fractional decimal by a whole decimal. `23.5 × 10 = 235`.
+5. Final Arithmetic Result: Binary: `11101011`, Octal: `353`, Decimal: `235`, Hexadecimal: `EB`.
+
+**Test Case 12: Non-Decimal Fractional Input Calculation**
+![Sample-12](sample-outputs/Sample-Output-12.png)
+![Sample-12-1](sample-outputs/Sample-Output-12-1.png)
+1. Inputs: `Input A = 101.1` (Binary), `Input B = 1A` (Hexadecimal)
+2. Arithmetic Expression: `A + B`
+3. Expected Equation Breakdown: `(101.1)₂ + (1A)₁₆`
+4. Expected Logic: Base conversions equate to (5.5 + 26). The fractional binary successfully adds to the whole hexadecimal. `5.5 + 26 = 31.5`.
+5. Final Arithmetic Result: Binary: `11111.1`, Octal: `37.4`, Decimal: `31.5`, Hexadecimal: `1F.8`.
 
 **Code Screenshots**
 
@@ -467,4 +645,3 @@ graph TD
 ![Code-SS-8](code-snippets/ss-8.png)
 ![Code-SS-9](code-snippets/ss-9.png)
 ![Code-SS-10](code-snippets/ss-10.png)
-![Code-SS-11](code-snippets/ss-11.png)
