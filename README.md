@@ -633,6 +633,36 @@ graph TD
 4. Expected Logic: Base conversions equate to (5.5 + 26). The fractional binary successfully adds to the whole hexadecimal. `5.5 + 26 = 31.5`.
 5. Final Arithmetic Result: Binary: `11111.1`, Octal: `37.4`, Decimal: `31.5`, Hexadecimal: `1F.8`.
 
+**Test Case 13: Standard Complement Generation (Base 10)**
+![Sample-13](sample-outputs/Sample-Output-13.png)
+1. Inputs: `Input A = 25` (Decimal)
+2. Expected Logic: The system computes standard base conversions and dynamically generates the 8-bit padded 1's and 2's complements for the positive integer.
+3. Expected Output: Binary: `11001`, Octal: `31`, Decimal: `25`, Hexadecimal: `19`, 1's Comp (Int): `11100110`, 2's Comp (Int): `11100111`.
+
+**Test Case 14: Complement Subtraction (Positive Result / Minuend > Subtrahend)**
+![Sample-14](sample-outputs/Sample-Output-14.png)
+![Sample-13](sample-outputs/Sample-Output-14-1.png)
+1. Inputs: Set Minuend dropdown to Variable `A` (Decimal `15`), Set Subtrahend to Variable `B` (Decimal `5`).
+2. Expected Logic: The tool processes `15 - 5` using 8-bit representation.
+3. 1's Complement Output: Converts S(5) to `00000101`, 1's comp `11111010`. Adds to M(15) `00001111`. Yields carry=1. Adds end-around carry to yield `00001010` (10).
+4. 2's Complement Output: Converts S(5) to 2's comp `11111011`. Adds to M(15). Yields carry=1 (discarded), resulting directly in `00001010` (10).
+
+**Test Case 15: Complement Subtraction (Negative Result / Minuend < Subtrahend)**
+![Sample-15](sample-outputs/Sample-Output-15.png)
+1. Inputs: Set Minuend dropdown to Variable `A` (Decimal `5`), Set Subtrahend to Variable `B` (Decimal `15`).
+2. Expected Logic: The tool processes `5 - 15` using 8-bit representation.
+3. 1's Complement Output: Converts S(15) to `00001111`, 1's comp `11110000`. Adds to M(5) `00000101`. Yields no carry. Final result is a negative number in 1's complement form: `11110101`.
+4. 2's Complement Output: Converts S(15) to 2's comp `11110001`. Adds to M(5). Yields no carry. Final result is a negative number in 2's complement form: `11110110`.
+
+**Test Case 16: Final Arithmetic Result with Complements**
+![Sample-16](sample-outputs/Sample-Output-16.png)
+![Sample-16-1](sample-outputs/Sample-Output-16-1.png)
+1. Inputs: `Input A = 10` (Decimal), `Input B = 2` (Decimal)
+2. Arithmetic Expression: `A - B`
+3. Expected Equation Breakdown: `(10)₁₀ - (2)₁₀`
+4. Expected Logic: The system computes `10 - 2 = 8`, then dynamically generates the complements for the final computed result.
+5. Final Arithmetic Result: Binary: `1000`, Octal: `10`, Decimal: `8`, Hexadecimal: `8`, 1's Comp (Int): `11110111`, 2's Comp (Int): `11111000`.
+
 **Code Screenshots**
 
 ![Code-SS-1](code-snippets/ss-1.png)
@@ -645,3 +675,11 @@ graph TD
 ![Code-SS-8](code-snippets/ss-8.png)
 ![Code-SS-9](code-snippets/ss-9.png)
 ![Code-SS-10](code-snippets/ss-10.png)
+![Code-SS-11](code-snippets/ss-11.png)
+![Code-SS-12](code-snippets/ss-12.png)
+![Code-SS-13](code-snippets/ss-13.png)
+![Code-SS-14](code-snippets/ss-14.png)
+![Code-SS-15](code-snippets/ss-15.png)
+![Code-SS-16](code-snippets/ss-16.png)
+![Code-SS-17](code-snippets/ss-17.png)
+![Code-SS-18](code-snippets/ss-18.png)
