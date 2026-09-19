@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Number System Converter & Calculator</title>
   
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="[https://fonts.googleapis.com](https://fonts.googleapis.com)">
+  <link rel="preconnect" href="[https://fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+  <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap)" rel="stylesheet">
   
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -26,13 +26,13 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 min-h-screen p-4 md:p-8 font-sans text-slate-800 dark:text-indigo-100 transition-colors duration-300">
 
-  <div class="max-w-5xl mx-auto">
+  <div class="max-w-6xl mx-auto">
     <div class="flex justify-end mb-4">
       <button onclick="toggleTheme()" class="p-3 rounded-full shadow-lg bg-indigo-100 dark:bg-slate-800 text-indigo-700 dark:text-purple-400 hover:bg-indigo-200 dark:hover:bg-slate-700 border border-indigo-200 dark:border-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Toggle Light/Dark Mode">
-        <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
         </svg>
-        <svg class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <svg class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
         </svg>
       </button>
@@ -44,7 +44,7 @@
       <div class="mb-8 p-6 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl">
         <label class="block text-lg font-bold text-indigo-800 dark:text-purple-300 mb-3 text-center">Arithmetic Expression</label>
         <p class="text-sm text-center text-indigo-600 dark:text-indigo-400 mb-4">Use variables (A, B, C...) and operators (+, -, *, /, parentheses). Example: <strong>(A + B - C) * D</strong></p>
-        <input type="text" id="math-expression" class="w-full md:w-3/4 mx-auto block bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 p-4 rounded-lg text-2xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:ring-4 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors shadow-sm uppercase tracking-widest" placeholder="A + B + C" value="A + B + C" oninput="calculateTotal()">
+        <input type="text" id="math-expression" class="w-full md:w-3/4 mx-auto block bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 p-4 rounded-lg text-2xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:ring-4 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors shadow-sm uppercase tracking-widest" placeholder="A + B - C" value="A + B - C" oninput="calculateTotal()">
       </div>
 
       <div id="cases-container" class="grid grid-cols-1 gap-6">
@@ -65,11 +65,28 @@
         </div>
       </div>
 
+      <div class="mt-8 p-8 bg-slate-800 dark:bg-slate-950 border-2 border-emerald-500 dark:border-emerald-600 rounded-2xl shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+        <h2 class="text-2xl font-bold text-white mb-2 text-center">Complement Subtraction Method</h2>
+        <p class="text-sm text-center text-emerald-400 mb-6">Select two variables to demonstrate step-by-step subtraction (Minuend - Subtrahend) using complements. Uses absolute integer parts.</p>
+        
+        <div class="flex justify-center items-center gap-4 mb-6">
+          <select id="comp-minuend" class="bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:ring-2 focus:ring-emerald-500 font-bold text-lg" onchange="calcComplementSub()"></select>
+          <span class="text-white text-3xl font-bold">-</span>
+          <select id="comp-subtrahend" class="bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:ring-2 focus:ring-emerald-500 font-bold text-lg" onchange="calcComplementSub()"></select>
+        </div>
+
+        <div id="comp-sub-output" class="text-slate-300 text-center font-mono">
+           Awaiting variable selection...
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
     let caseCounter = 0;
+    window.globalVars = {}; // Store numeric values for complement subtractor
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
@@ -106,13 +123,47 @@
       return (isNeg ? '-' : '') + str;
     }
 
+    // Binary Complement Generator
+    function getComplements(num) {
+      if (isNaN(num)) return { ones: "NaN", twos: "NaN" };
+      let intVal = Math.trunc(Math.abs(num)); // Handle absolute integer part
+      let binStr = intVal.toString(2);
+      
+      let bits = 8;
+      while (binStr.length > bits - 1) bits += 8; // Leave room for sign bit
+      binStr = binStr.padStart(bits, '0');
+
+      let onesComp = binStr.split('').map(b => b === '0' ? '1' : '0').join('');
+      
+      let twosComp = '';
+      let carry = 1;
+      for (let i = bits - 1; i >= 0; i--) {
+        let sum = parseInt(onesComp[i]) + carry;
+        twosComp = (sum % 2) + twosComp;
+        carry = Math.floor(sum / 2);
+      }
+      
+      return { ones: onesComp, twos: twosComp, bits: bits };
+    }
+
+    // Binary Addition Helper
+    function addBinaryStr(a, b) {
+        let res = '', carry = 0;
+        for(let i = a.length - 1; i >= 0; i--) {
+            let sum = parseInt(a[i]) + parseInt(b[i]) + carry;
+            res = (sum % 2) + res;
+            carry = Math.floor(sum / 2);
+        }
+        return { sum: res, carry: carry };
+    }
+
     function createCaseHTML(id) {
       return `
         <div id="case-${id}" data-var="" class="p-6 border border-slate-200 dark:border-indigo-800 rounded-xl bg-slate-50 dark:bg-slate-800 relative shadow-sm dark:shadow-inner transition-colors duration-300">
           <div class="flex justify-between items-center mb-4">
             <label class="case-label font-bold text-xl text-indigo-800 dark:text-purple-300 bg-indigo-100 dark:bg-indigo-900/50 px-4 py-1 rounded-full border border-indigo-200 dark:border-indigo-700">Input</label>
             <button onclick="removeCase(${id})" class="remove-btn p-2 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg hidden transition-colors focus:outline-none" title="Remove Input">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
@@ -197,7 +248,6 @@
         return;
       }
 
-      // Regex updated to support optional fractional parts (decimals)
       let isValid = false;
       if (inBase === 2) isValid = /^-?[01]+(\.[01]+)?$/.test(rawValue);
       if (inBase === 8) isValid = /^-?[0-7]+(\.[0-7]+)?$/.test(rawValue);
@@ -211,6 +261,7 @@
       }
 
       let decValue = parseToDecimal(rawValue, inBase);
+      let comps = getComplements(decValue);
 
       const binStr = formatBase(decValue, 2);
       const octStr = formatBase(decValue, 8);
@@ -218,7 +269,7 @@
       const hexStr = formatBase(decValue, 16);
 
       outputDiv.innerHTML = `
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 w-full">
           <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-indigo-800 min-w-0 flex flex-col">
             <span class="text-xs font-semibold text-slate-500 dark:text-indigo-400 mb-1">Binary</span>
             <div class="overflow-x-auto"><span class="text-sm font-mono font-bold text-indigo-700 dark:text-purple-300 break-all">${binStr}</span></div>
@@ -234,6 +285,14 @@
           <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-indigo-800 min-w-0 flex flex-col">
             <span class="text-xs font-semibold text-slate-500 dark:text-indigo-400 mb-1">Hexadecimal</span>
             <div class="overflow-x-auto"><span class="text-sm font-mono font-bold text-indigo-700 dark:text-purple-300 break-all">${hexStr}</span></div>
+          </div>
+          <div class="bg-indigo-50 dark:bg-indigo-950/40 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800 min-w-0 flex flex-col">
+            <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1">1's Comp (Int)</span>
+            <div class="overflow-x-auto"><span class="text-sm font-mono font-bold text-indigo-800 dark:text-purple-200 break-all">${comps.ones}</span></div>
+          </div>
+          <div class="bg-indigo-50 dark:bg-indigo-950/40 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800 min-w-0 flex flex-col">
+            <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1">2's Comp (Int)</span>
+            <div class="overflow-x-auto"><span class="text-sm font-mono font-bold text-indigo-800 dark:text-purple-200 break-all">${comps.twos}</span></div>
           </div>
         </div>
       `;
@@ -269,7 +328,7 @@
       const totalDiv = document.getElementById('final-total-container');
       const exprString = document.getElementById('math-expression').value.trim().toUpperCase();
       
-      let variables = {};
+      window.globalVars = {};
       let displayStrs = {};
       let allValid = true;
 
@@ -296,13 +355,15 @@
         }
 
         let decValue = parseToDecimal(rawValue, inBase);
-        variables[varName] = decValue;
+        window.globalVars[varName] = decValue;
 
         const sub = inBase === 2 ? '₂' : inBase === 8 ? '₈' : inBase === 10 ? '₁₀' : '₁₆';
         displayStrs[varName] = `(${rawValue})${sub}`;
       });
 
-      if (!allValid || Object.keys(variables).length === 0) {
+      updateComplementSelects();
+
+      if (!allValid || Object.keys(window.globalVars).length === 0) {
         totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Enter valid numbers in all active fields to compute.</p>";
         return;
       }
@@ -312,7 +373,6 @@
         return;
       }
 
-      // Regex updated to parse direct decimal numbers typed in the expression field
       const tokens = exprString.match(/[A-Z]+|[0-9]*\.?[0-9]+|[+\-*/()]/g);
       if (!tokens) {
         totalDiv.innerHTML = "<p class='text-red-400 text-xl font-bold'>Error: Invalid characters in expression.</p>";
@@ -326,7 +386,7 @@
 
       try {
         for (let token of tokens) {
-          if (variables.hasOwnProperty(token)) {
+          if (window.globalVars.hasOwnProperty(token)) {
             postfix.push(token);
             formattedEqTokens.push(`<span class="text-white">${displayStrs[token]}</span>`);
           } else if (/^[0-9]*\.?[0-9]+$/.test(token)) {
@@ -360,7 +420,8 @@
           postfix.push(op);
         }
 
-        const finalResult = evaluatePostfix(postfix, variables);
+        const finalResult = evaluatePostfix(postfix, window.globalVars);
+        const comps = getComplements(finalResult);
 
         const binStr = formatBase(finalResult, 2);
         const octStr = formatBase(finalResult, 8);
@@ -373,7 +434,7 @@
             <p class="text-xl md:text-2xl font-mono whitespace-nowrap">${formattedEqTokens.join('')} <span class="text-pink-400 mx-2">=</span></p>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
               <span class="block text-sm font-bold text-slate-400 mb-1">Binary</span>
               <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-green-400 break-all">${binStr}</span></div>
@@ -390,11 +451,108 @@
               <span class="block text-sm font-bold text-slate-400 mb-1">Hexadecimal</span>
               <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-pink-400 break-all">${hexStr}</span></div>
             </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-indigo-500/50 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-indigo-300 mb-1">1's Comp (Int)</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-indigo-400 break-all">${comps.ones}</span></div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-indigo-500/50 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-indigo-300 mb-1">2's Comp (Int)</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-indigo-400 break-all">${comps.twos}</span></div>
+            </div>
           </div>
         `;
       } catch (err) {
         totalDiv.innerHTML = `<p class='text-red-400 text-xl font-bold'>Error: ${err.message}</p>`;
       }
+    }
+
+    function updateComplementSelects() {
+      const minuendSel = document.getElementById('comp-minuend');
+      const subtrahendSel = document.getElementById('comp-subtrahend');
+      const mVal = minuendSel.value;
+      const sVal = subtrahendSel.value;
+
+      minuendSel.innerHTML = '';
+      subtrahendSel.innerHTML = '';
+
+      Object.keys(window.globalVars).forEach(key => {
+        minuendSel.add(new Option(`Var ${key}`, key));
+        subtrahendSel.add(new Option(`Var ${key}`, key));
+      });
+
+      if(mVal && window.globalVars[mVal] !== undefined) minuendSel.value = mVal;
+      if(sVal && window.globalVars[sVal] !== undefined) subtrahendSel.value = sVal;
+      else if(Object.keys(window.globalVars).length > 1) subtrahendSel.selectedIndex = 1;
+
+      calcComplementSub();
+    }
+
+    function calcComplementSub() {
+      let mKey = document.getElementById('comp-minuend').value;
+      let sKey = document.getElementById('comp-subtrahend').value;
+      let out = document.getElementById('comp-sub-output');
+
+      if(!mKey || !sKey || window.globalVars[mKey] === undefined || window.globalVars[sKey] === undefined) {
+        out.innerHTML = "Awaiting valid variables for calculation...";
+        return;
+      }
+
+      let mVal = Math.trunc(window.globalVars[mKey]);
+      let sVal = Math.abs(Math.trunc(window.globalVars[sKey])); 
+
+      let maxAbs = Math.max(Math.abs(mVal), sVal);
+      let bits = 8;
+      while(maxAbs >= Math.pow(2, bits - 1)) bits += 8;
+
+      function toSignedBin(val, bits) {
+        if (val >= 0) return val.toString(2).padStart(bits, '0');
+        let posBin = Math.abs(val).toString(2).padStart(bits, '0');
+        let flipped = posBin.split('').map(b => b==='0'?'1':'0').join('');
+        return addBinaryStr(flipped, '1'.padStart(bits, '0')).sum;
+      }
+
+      let mBin = toSignedBin(mVal, bits);
+      let sBinAbs = toSignedBin(sVal, bits);
+      
+      let sOnes = sBinAbs.split('').map(b => b==='0'?'1':'0').join('');
+      let sTwos = addBinaryStr(sOnes, '1'.padStart(bits, '0')).sum;
+
+      let add1 = addBinaryStr(mBin, sOnes);
+      let finalOnes = add1.sum;
+      let endCarryTxt = "No carry, result is negative (in 1's complement form).";
+      if (add1.carry) {
+        finalOnes = addBinaryStr(add1.sum, '1'.padStart(bits, '0')).sum;
+        endCarryTxt = "Carry = 1. Add End-Around Carry (+1).";
+      }
+
+      let add2 = addBinaryStr(mBin, sTwos);
+      let finalTwos = add2.sum;
+
+      out.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left mt-4">
+          <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner">
+            <h3 class="text-teal-400 font-bold mb-4 border-b border-slate-700 pb-2">1's Complement Method</h3>
+            <p class="text-slate-400 mb-1">M: <span class="text-white">${mBin}</span></p>
+            <p class="text-slate-400 mb-1">S: <span class="text-white">${sBinAbs}</span></p>
+            <p class="text-slate-400 mb-3 border-b border-slate-700 pb-2">1's Comp(S): <span class="text-pink-400">${sOnes}</span></p>
+            <p class="text-slate-400 mb-1">Add M + 1's Comp(S):</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded mb-2">${mBin}<br>+${sOnes}<br>------------<br>${add1.carry ? '1 ' : '0 '}${add1.sum}</p>
+            <p class="text-emerald-400 text-sm mb-2">${endCarryTxt}</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded">Final: ${finalOnes}</p>
+          </div>
+          
+          <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner">
+            <h3 class="text-teal-400 font-bold mb-4 border-b border-slate-700 pb-2">2's Complement Method</h3>
+            <p class="text-slate-400 mb-1">M: <span class="text-white">${mBin}</span></p>
+            <p class="text-slate-400 mb-1">S: <span class="text-white">${sBinAbs}</span></p>
+            <p class="text-slate-400 mb-3 border-b border-slate-700 pb-2">2's Comp(S): <span class="text-pink-400">${sTwos}</span></p>
+            <p class="text-slate-400 mb-1">Add M + 2's Comp(S):</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded mb-2">${mBin}<br>+${sTwos}<br>------------<br>${add2.carry ? '1 ' : '0 '}${add2.sum}</p>
+            <p class="text-emerald-400 text-sm mb-2">Discard carry out.</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded">Final: ${finalTwos}</p>
+          </div>
+        </div>
+      `;
     }
 
     addCase();

@@ -16,7 +16,7 @@
 4. Prompt the user to enter a number and select its corresponding base (Binary, Octal, Decimal, Hexadecimal) for each active input.
 5. Validate each input string against the allowed characters for its selected base, including support for fractional floating-point values.
 6. Display individual conversion results (Binary, Octal, Decimal, Hexadecimal) for each valid input block.
-7. Convert all valid input strings into a standard decimal numeric format using a custom fractional parser and map them to their assigned alphabetical variables.
+7. Convert all valid input strings into standard decimal floating-point numbers using a custom fractional parser and map them to their assigned alphabetical variables.
 8. Read the custom arithmetic expression input by the user (e.g., `A + B * C`).
 9. Parse the expression using the Shunting-yard algorithm to convert it from infix to postfix notation, enforcing strict operator precedence and parenthetical grouping logic.
 10. Evaluate the postfix array using a stack and the mapped numeric decimal variables.
@@ -45,7 +45,7 @@ START PROGRAM
       READ rawValue AND inBase
       IF rawValue IS INVALID THEN ABORT AND DISPLAY ERROR
       
-      SET decValue = CUSTOM PARSE rawValue TO Decimal INCLUDING FRACTIONS
+      SET decValue = CUSTOM PARSE rawValue TO Decimal FLOAT INCLUDING FRACTIONS
       STORE decValue IN variables[assignedLetter]
     END FOR
     
