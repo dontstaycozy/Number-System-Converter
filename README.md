@@ -11,19 +11,20 @@
 
 ### Algorithm
 1. Start the program.
-2. Initialize the user interface with three default input cases and a custom arithmetic expression field.
+2. Initialize the user interface with three default input cases, a custom arithmetic expression field, and a dedicated complement subtraction tool.
 3. Dynamically assign a sequential alphabetical variable (A, B, C...) to each input case.
 4. Prompt the user to enter a number and select its corresponding base (Binary, Octal, Decimal, Hexadecimal) for each active input.
 5. Validate each input string against the allowed characters for its selected base, including support for fractional floating-point values.
-6. Display individual conversion results (Binary, Octal, Decimal, Hexadecimal) for each valid input block.
-7. Convert all valid input strings into standard decimal floating-point numbers using a custom fractional parser and map them to their assigned alphabetical variables.
-8. Read the custom arithmetic expression input by the user (e.g., `A + B * C`).
-9. Parse the expression using the Shunting-yard algorithm to convert it from infix to postfix notation, enforcing strict operator precedence and parenthetical grouping logic.
-10. Evaluate the postfix array using a stack and the mapped numeric decimal variables.
-11. Display the formatted equation breakdown and the final computed arithmetic result in Binary, Octal, Decimal, and Hexadecimal formats.
-12. Automatically recalculate and reassign variables (preventing alphabetical gaps) if the user dynamically adds or removes input cases.
-13. Handle and display explicit errors for invalid inputs, syntax errors, mismatched parentheses, unassigned variables, or mathematical impossibilities (division by zero).
-14. End the program.
+6. Calculate the standard conversions (Binary, Octal, Decimal, Hexadecimal).
+7. Calculate the 1's Complement and 2's Complement for the integer part of each valid input using dynamic bit-padding (8-bit, 16-bit, 32-bit depending on magnitude).
+8. Display all six representations (Binary, Octal, Decimal, Hexadecimal, 1's Comp, 2's Comp) in the individual results grid.
+9. Convert all valid input strings into a standard decimal floating-point format using a custom fractional parser and map them to their assigned alphabetical variables.
+10. Read the custom arithmetic expression input by the user. Parse the expression using the Shunting-yard algorithm to evaluate strict operator precedence and parenthetical grouping logic.
+11. Display the formatted equation breakdown and final computed arithmetic result in all base systems and complement formats.
+12. Populate the Complement Subtraction Tool with valid variables. When two variables are selected (Minuend and Subtrahend), compute and display the step-by-step binary subtraction process utilizing both the 1's Complement Method (End-Around Carry) and 2's Complement Method.
+13. Automatically recalculate and reassign variables (preventing alphabetical gaps) if the user dynamically adds or removes input cases.
+14. Handle and display explicit errors for invalid inputs, syntax errors, mismatched parentheses, or mathematical impossibilities (division by zero).
+15. End the program.
 
 ### Pseudocode
 ```text
@@ -31,10 +32,12 @@ START PROGRAM
   SET caseCounter = 0
   CALL addCase() THREE TIMES to render initial interface
 
-  FUNCTION reindexLabels()
-    FOR EACH active case container:
-      ASSIGN sequential letter (A, B, C...) based on index
-    END FOR
+  FUNCTION getComplements(num)
+    SET intVal = TRUNCATE(num)
+    SET bits = CALCULATE required bits (8, 16, 32) based on intVal
+    SET onesComp = INVERT BITS OF (absolute intVal in binary)
+    SET twosComp = ADD 1 TO onesComp
+    RETURN onesComp, twosComp
   END FUNCTION
 
   FUNCTION calculateTotal()
@@ -45,42 +48,42 @@ START PROGRAM
       READ rawValue AND inBase
       IF rawValue IS INVALID THEN ABORT AND DISPLAY ERROR
       
-      SET decValue = CUSTOM PARSE rawValue TO Decimal FLOAT INCLUDING FRACTIONS
+      SET decValue = CUSTOM PARSE rawValue TO Decimal FLOAT
       STORE decValue IN variables[assignedLetter]
+      
+      DISPLAY Base Conversions AND getComplements(decValue)
     END FOR
     
-    IF variables IS EMPTY OR exprString IS EMPTY THEN RETURN
+    POPULATE Complement Subtraction Selectors WITH keys OF variables
 
     TRY
-      SET tokens = EXTRACT variables, numbers, operators, parentheses FROM exprString
-      SET postfix = []
-      SET opStack = []
+      SET postfix = SHUNTING_YARD_PARSE(exprString)
+      SET finalResult = EVALUATE_POSTFIX(postfix, variables)
       
-      // Shunting-yard Algorithm
-      FOR EACH token IN tokens:
-        IF token IS variable OR number:
-          PUSH token TO postfix
-        ELSE IF token IS operator (+, -, *, /):
-          WHILE top of opStack has higher or equal precedence:
-            PUSH popped opStack TO postfix
-          PUSH token TO opStack
-        ELSE IF token IS '(':
-          PUSH token TO opStack
-        ELSE IF token IS ')':
-          WHILE top of opStack IS NOT '(':
-            PUSH popped opStack TO postfix
-          POP '(' FROM opStack
-      END FOR
-      
-      WHILE opStack IS NOT EMPTY:
-        PUSH popped opStack TO postfix
-
-      SET finalResult = evaluatePostfix(postfix, variables)
-      DISPLAY formatted equation breakdown
-      DISPLAY CONVERT finalResult TO Base 2, 8, 10, 16 IN Final Output Grid
+      DISPLAY finalResult IN Base 2, 8, 10, 16, 1's Comp, 2's Comp
     CATCH ERROR
       DISPLAY explicit error message
     END TRY
+  END FUNCTION
+
+  FUNCTION calcComplementSub()
+    READ minuendVar AND subtrahendVar
+    SET M = TRUNCATE(variables[minuendVar])
+    SET S = ABS(TRUNCATE(variables[subtrahendVar]))
+    
+    SET paddedM = BINARY(M) padded to common bit length
+    SET paddedS = BINARY(S) padded to common bit length
+    
+    // 1's Complement Method
+    SET onesS = INVERT(paddedS)
+    SET sum1 = paddedM + onesS
+    IF carry THEN sum1 = sum1 + 1 (End Around Carry)
+    
+    // 2's Complement Method
+    SET twosS = INVERT(paddedS) + 1
+    SET sum2 = paddedM + twosS (Discard Carry)
+    
+    DISPLAY step-by-step calculations FOR both methods
   END FUNCTION
 END PROGRAM
 ```
@@ -97,9 +100,11 @@ graph TD
     ValidChars -- No --> ErrChars[Display 'Invalid input' Error]
     ValidChars -- Yes --> ConvertNum[Convert to standard decimal value]
     ConvertNum --> FormatIndiv[Display in Base 2, 8, 10, 16]
+    ConvertNum --> CompIndiv[Calculate & Display 1's and 2's Complement]
   end
 
   FormatIndiv --> CalcTotal[Start Final Math Calculation]
+  CompIndiv --> CalcTotal
   Await --> CalcTotal
   ErrChars --> CalcTotal
 
@@ -122,8 +127,18 @@ graph TD
 
     Eval --> DivZero{Is it dividing by zero?}
     DivZero -- Yes --> ErrDiv[Display 'Division by zero' Error]
-    DivZero -- No --> FinalConvert[Convert Final Answer to Base 2, 8, 10, 16]
+    DivZero -- No --> FinalConvert[Convert Final Answer to all bases & complements]
+    FinalConvert --> UpdateCompSub[Update Complement Subtraction Dropdowns]
     FinalConvert --> Output[Show Equation Breakdown & Final Results Grid]
+  end
+
+  subgraph Complement Subtraction Tool
+    UpdateCompSub --> UserSelect[User Selects Minuend & Subtrahend]
+    UserSelect --> PadBits[Pad Binary to 8/16/32 Bits]
+    PadBits --> Math1[Execute 1's Complement Math & End-Around Carry]
+    PadBits --> Math2[Execute 2's Complement Math]
+    Math1 --> ShowSteps[Display Step-by-Step UI Breakdown]
+    Math2 --> ShowSteps
   end
 ```
 
@@ -157,7 +172,7 @@ graph TD
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 min-h-screen p-4 md:p-8 font-sans text-slate-800 dark:text-indigo-100 transition-colors duration-300">
 
-  <div class="max-w-5xl mx-auto">
+  <div class="max-w-6xl mx-auto">
     <div class="flex justify-end mb-4">
       <button onclick="toggleTheme()" class="p-3 rounded-full shadow-lg bg-indigo-100 dark:bg-slate-800 text-indigo-700 dark:text-purple-400 hover:bg-indigo-200 dark:hover:bg-slate-700 border border-indigo-200 dark:border-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Toggle Light/Dark Mode">
         <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
@@ -175,7 +190,7 @@ graph TD
       <div class="mb-8 p-6 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl">
         <label class="block text-lg font-bold text-indigo-800 dark:text-purple-300 mb-3 text-center">Arithmetic Expression</label>
         <p class="text-sm text-center text-indigo-600 dark:text-indigo-400 mb-4">Use variables (A, B, C...) and operators (+, -, *, /, parentheses). Example: <strong>(A + B - C) * D</strong></p>
-        <input type="text" id="math-expression" class="w-full md:w-3/4 mx-auto block bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 p-4 rounded-lg text-2xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:ring-4 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors shadow-sm uppercase tracking-widest" placeholder="A + B + C" value="A + B + C" oninput="calculateTotal()">
+        <input type="text" id="math-expression" class="w-full md:w-3/4 mx-auto block bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 p-4 rounded-lg text-2xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:ring-4 focus:ring-indigo-500 dark:focus:ring-purple-500 transition-colors shadow-sm uppercase tracking-widest" placeholder="A + B - C" value="A + B - C" oninput="calculateTotal()">
       </div>
 
       <div id="cases-container" class="grid grid-cols-1 gap-6">
@@ -196,17 +211,33 @@ graph TD
         </div>
       </div>
 
+      <div class="mt-8 p-8 bg-slate-800 dark:bg-slate-950 border-2 border-emerald-500 dark:border-emerald-600 rounded-2xl shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+        <h2 class="text-2xl font-bold text-white mb-2 text-center">Complement Subtraction Method</h2>
+        <p class="text-sm text-center text-emerald-400 mb-6">Select two variables to demonstrate step-by-step subtraction (Minuend - Subtrahend) using complements. Uses absolute integer parts.</p>
+        
+        <div class="flex justify-center items-center gap-4 mb-6">
+          <select id="comp-minuend" class="bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:ring-2 focus:ring-emerald-500 font-bold text-lg" onchange="calcComplementSub()"></select>
+          <span class="text-white text-3xl font-bold">-</span>
+          <select id="comp-subtrahend" class="bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:ring-2 focus:ring-emerald-500 font-bold text-lg" onchange="calcComplementSub()"></select>
+        </div>
+
+        <div id="comp-sub-output" class="text-slate-300 text-center font-mono">
+           Awaiting variable selection...
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
     let caseCounter = 0;
+    window.globalVars = {};
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
     }
 
-    // Advanced Parser for Fractional Numbers across Base Systems
     function parseToDecimal(str, base) {
       const isNegative = str.startsWith('-');
       const cleanStr = str.replace('-', '');
@@ -228,13 +259,44 @@ graph TD
       return isNegative ? -total : total;
     }
 
-    // Formatter to standardize output format
     function formatBase(num, base) {
       if (isNaN(num)) return "NaN";
       const isNeg = num < 0;
       const absVal = Math.abs(num);
       let str = absVal.toString(base).toUpperCase();
       return (isNeg ? '-' : '') + str;
+    }
+
+    function getComplements(num) {
+      if (isNaN(num)) return { ones: "NaN", twos: "NaN" };
+      let intVal = Math.trunc(Math.abs(num)); 
+      let binStr = intVal.toString(2);
+      
+      let bits = 8;
+      while (binStr.length > bits - 1) bits += 8; 
+      binStr = binStr.padStart(bits, '0');
+
+      let onesComp = binStr.split('').map(b => b === '0' ? '1' : '0').join('');
+      
+      let twosComp = '';
+      let carry = 1;
+      for (let i = bits - 1; i >= 0; i--) {
+        let sum = parseInt(onesComp[i]) + carry;
+        twosComp = (sum % 2) + twosComp;
+        carry = Math.floor(sum / 2);
+      }
+      
+      return { ones: onesComp, twos: twosComp, bits: bits };
+    }
+
+    function addBinaryStr(a, b) {
+        let res = '', carry = 0;
+        for(let i = a.length - 1; i >= 0; i--) {
+            let sum = parseInt(a[i]) + parseInt(b[i]) + carry;
+            res = (sum % 2) + res;
+            carry = Math.floor(sum / 2);
+        }
+        return { sum: res, carry: carry };
     }
 
     function createCaseHTML(id) {
@@ -275,7 +337,7 @@ graph TD
     function reindexLabels() {
       const cases = document.querySelectorAll('[id^="case-"]');
       cases.forEach((caseEl, index) => {
-        const varLetter = String.fromCharCode(65 + index); // 0 = A, 1 = B, etc.
+        const varLetter = String.fromCharCode(65 + index); 
         caseEl.setAttribute('data-var', varLetter);
         const labelEl = caseEl.querySelector('.case-label');
         if (labelEl) {
@@ -328,7 +390,6 @@ graph TD
         return;
       }
 
-      // Regex updated to support optional fractional parts (decimals)
       let isValid = false;
       if (inBase === 2) isValid = /^-?[01]+(\.[01]+)?$/.test(rawValue);
       if (inBase === 8) isValid = /^-?[0-7]+(\.[0-7]+)?$/.test(rawValue);
@@ -342,6 +403,7 @@ graph TD
       }
 
       let decValue = parseToDecimal(rawValue, inBase);
+      let comps = getComplements(decValue);
 
       const binStr = formatBase(decValue, 2);
       const octStr = formatBase(decValue, 8);
@@ -349,7 +411,7 @@ graph TD
       const hexStr = formatBase(decValue, 16);
 
       outputDiv.innerHTML = `
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 w-full">
           <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-indigo-800 min-w-0 flex flex-col">
             <span class="text-xs font-semibold text-slate-500 dark:text-indigo-400 mb-1">Binary</span>
             <div class="overflow-x-auto"><span class="text-sm font-mono font-bold text-indigo-700 dark:text-purple-300 break-all">${binStr}</span></div>
@@ -365,6 +427,14 @@ graph TD
           <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-indigo-800 min-w-0 flex flex-col">
             <span class="text-xs font-semibold text-slate-500 dark:text-indigo-400 mb-1">Hexadecimal</span>
             <div class="overflow-x-auto"><span class="text-sm font-mono font-bold text-indigo-700 dark:text-purple-300 break-all">${hexStr}</span></div>
+          </div>
+          <div class="bg-indigo-50 dark:bg-indigo-950/40 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800 min-w-0 flex flex-col">
+            <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1">1's Comp (Int)</span>
+            <div class="overflow-x-auto"><span class="text-sm font-mono font-bold text-indigo-800 dark:text-purple-200 break-all">${comps.ones}</span></div>
+          </div>
+          <div class="bg-indigo-50 dark:bg-indigo-950/40 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800 min-w-0 flex flex-col">
+            <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1">2's Comp (Int)</span>
+            <div class="overflow-x-auto"><span class="text-sm font-mono font-bold text-indigo-800 dark:text-purple-200 break-all">${comps.twos}</span></div>
           </div>
         </div>
       `;
@@ -400,7 +470,7 @@ graph TD
       const totalDiv = document.getElementById('final-total-container');
       const exprString = document.getElementById('math-expression').value.trim().toUpperCase();
       
-      let variables = {};
+      window.globalVars = {};
       let displayStrs = {};
       let allValid = true;
 
@@ -427,13 +497,15 @@ graph TD
         }
 
         let decValue = parseToDecimal(rawValue, inBase);
-        variables[varName] = decValue;
+        window.globalVars[varName] = decValue;
 
         const sub = inBase === 2 ? '₂' : inBase === 8 ? '₈' : inBase === 10 ? '₁₀' : '₁₆';
         displayStrs[varName] = `(${rawValue})${sub}`;
       });
 
-      if (!allValid || Object.keys(variables).length === 0) {
+      updateComplementSelects();
+
+      if (!allValid || Object.keys(window.globalVars).length === 0) {
         totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Enter valid numbers in all active fields to compute.</p>";
         return;
       }
@@ -443,7 +515,6 @@ graph TD
         return;
       }
 
-      // Regex updated to parse direct decimal numbers typed in the expression field
       const tokens = exprString.match(/[A-Z]+|[0-9]*\.?[0-9]+|[+\-*/()]/g);
       if (!tokens) {
         totalDiv.innerHTML = "<p class='text-red-400 text-xl font-bold'>Error: Invalid characters in expression.</p>";
@@ -457,7 +528,7 @@ graph TD
 
       try {
         for (let token of tokens) {
-          if (variables.hasOwnProperty(token)) {
+          if (window.globalVars.hasOwnProperty(token)) {
             postfix.push(token);
             formattedEqTokens.push(`<span class="text-white">${displayStrs[token]}</span>`);
           } else if (/^[0-9]*\.?[0-9]+$/.test(token)) {
@@ -491,7 +562,8 @@ graph TD
           postfix.push(op);
         }
 
-        const finalResult = evaluatePostfix(postfix, variables);
+        const finalResult = evaluatePostfix(postfix, window.globalVars);
+        const comps = getComplements(finalResult);
 
         const binStr = formatBase(finalResult, 2);
         const octStr = formatBase(finalResult, 8);
@@ -504,7 +576,7 @@ graph TD
             <p class="text-xl md:text-2xl font-mono whitespace-nowrap">${formattedEqTokens.join('')} <span class="text-pink-400 mx-2">=</span></p>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-left overflow-hidden">
               <span class="block text-sm font-bold text-slate-400 mb-1">Binary</span>
               <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-green-400 break-all">${binStr}</span></div>
@@ -521,11 +593,108 @@ graph TD
               <span class="block text-sm font-bold text-slate-400 mb-1">Hexadecimal</span>
               <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-pink-400 break-all">${hexStr}</span></div>
             </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-indigo-500/50 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-indigo-300 mb-1">1's Comp (Int)</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-indigo-400 break-all">${comps.ones}</span></div>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-indigo-500/50 text-left overflow-hidden">
+              <span class="block text-sm font-bold text-indigo-300 mb-1">2's Comp (Int)</span>
+              <div class="overflow-x-auto"><span class="text-xl md:text-2xl font-mono font-bold text-indigo-400 break-all">${comps.twos}</span></div>
+            </div>
           </div>
         `;
       } catch (err) {
         totalDiv.innerHTML = `<p class='text-red-400 text-xl font-bold'>Error: ${err.message}</p>`;
       }
+    }
+
+    function updateComplementSelects() {
+      const minuendSel = document.getElementById('comp-minuend');
+      const subtrahendSel = document.getElementById('comp-subtrahend');
+      const mVal = minuendSel.value;
+      const sVal = subtrahendSel.value;
+
+      minuendSel.innerHTML = '';
+      subtrahendSel.innerHTML = '';
+
+      Object.keys(window.globalVars).forEach(key => {
+        minuendSel.add(new Option(`Var ${key}`, key));
+        subtrahendSel.add(new Option(`Var ${key}`, key));
+      });
+
+      if(mVal && window.globalVars[mVal] !== undefined) minuendSel.value = mVal;
+      if(sVal && window.globalVars[sVal] !== undefined) subtrahendSel.value = sVal;
+      else if(Object.keys(window.globalVars).length > 1) subtrahendSel.selectedIndex = 1;
+
+      calcComplementSub();
+    }
+
+    function calcComplementSub() {
+      let mKey = document.getElementById('comp-minuend').value;
+      let sKey = document.getElementById('comp-subtrahend').value;
+      let out = document.getElementById('comp-sub-output');
+
+      if(!mKey || !sKey || window.globalVars[mKey] === undefined || window.globalVars[sKey] === undefined) {
+        out.innerHTML = "Awaiting valid variables for calculation...";
+        return;
+      }
+
+      let mVal = Math.trunc(window.globalVars[mKey]);
+      let sVal = Math.abs(Math.trunc(window.globalVars[sKey])); 
+
+      let maxAbs = Math.max(Math.abs(mVal), sVal);
+      let bits = 8;
+      while(maxAbs >= Math.pow(2, bits - 1)) bits += 8;
+
+      function toSignedBin(val, bits) {
+        if (val >= 0) return val.toString(2).padStart(bits, '0');
+        let posBin = Math.abs(val).toString(2).padStart(bits, '0');
+        let flipped = posBin.split('').map(b => b==='0'?'1':'0').join('');
+        return addBinaryStr(flipped, '1'.padStart(bits, '0')).sum;
+      }
+
+      let mBin = toSignedBin(mVal, bits);
+      let sBinAbs = toSignedBin(sVal, bits);
+      
+      let sOnes = sBinAbs.split('').map(b => b==='0'?'1':'0').join('');
+      let sTwos = addBinaryStr(sOnes, '1'.padStart(bits, '0')).sum;
+
+      let add1 = addBinaryStr(mBin, sOnes);
+      let finalOnes = add1.sum;
+      let endCarryTxt = "No carry, result is negative (in 1's complement form).";
+      if (add1.carry) {
+        finalOnes = addBinaryStr(add1.sum, '1'.padStart(bits, '0')).sum;
+        endCarryTxt = "Carry = 1. Add End-Around Carry (+1).";
+      }
+
+      let add2 = addBinaryStr(mBin, sTwos);
+      let finalTwos = add2.sum;
+
+      out.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left mt-4">
+          <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner">
+            <h3 class="text-teal-400 font-bold mb-4 border-b border-slate-700 pb-2">1's Complement Method</h3>
+            <p class="text-slate-400 mb-1">M: <span class="text-white">${mBin}</span></p>
+            <p class="text-slate-400 mb-1">S: <span class="text-white">${sBinAbs}</span></p>
+            <p class="text-slate-400 mb-3 border-b border-slate-700 pb-2">1's Comp(S): <span class="text-pink-400">${sOnes}</span></p>
+            <p class="text-slate-400 mb-1">Add M + 1's Comp(S):</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded mb-2">${mBin}<br>+${sOnes}<br>------------<br>${add1.carry ? '1 ' : '0 '}${add1.sum}</p>
+            <p class="text-emerald-400 text-sm mb-2">${endCarryTxt}</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded">Final: ${finalOnes}</p>
+          </div>
+          
+          <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner">
+            <h3 class="text-teal-400 font-bold mb-4 border-b border-slate-700 pb-2">2's Complement Method</h3>
+            <p class="text-slate-400 mb-1">M: <span class="text-white">${mBin}</span></p>
+            <p class="text-slate-400 mb-1">S: <span class="text-white">${sBinAbs}</span></p>
+            <p class="text-slate-400 mb-3 border-b border-slate-700 pb-2">2's Comp(S): <span class="text-pink-400">${sTwos}</span></p>
+            <p class="text-slate-400 mb-1">Add M + 2's Comp(S):</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded mb-2">${mBin}<br>+${sTwos}<br>------------<br>${add2.carry ? '1 ' : '0 '}${add2.sum}</p>
+            <p class="text-emerald-400 text-sm mb-2">Discard carry out.</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded">Final: ${finalTwos}</p>
+          </div>
+        </div>
+      `;
     }
 
     addCase();
