@@ -22,9 +22,10 @@
 10. Read the custom arithmetic expression input by the user. Parse the expression using the Shunting-yard algorithm to evaluate strict operator precedence and parenthetical grouping logic.
 11. Display the formatted equation breakdown and final computed arithmetic result in all base systems and complement formats.
 12. Populate the Complement Subtraction Tool with valid variables. When two variables are selected (Minuend and Subtrahend), compute and display the step-by-step binary subtraction process utilizing both the 1's Complement Method (End-Around Carry) and 2's Complement Method.
-13. Automatically recalculate and reassign variables (preventing alphabetical gaps) if the user dynamically adds or removes input cases.
-14. Handle and display explicit errors for invalid inputs, syntax errors, mismatched parentheses, or mathematical impossibilities (division by zero).
-15. End the program.
+13. Populate the BCD Addition & Subtraction Tool. When two variables and an operation (+ or -) are selected, compute and display the BCD sum (with +6 correction if needed) or the difference using 9's and 10's complement subtraction.
+14. Automatically recalculate and reassign variables (preventing alphabetical gaps) if the user dynamically adds or removes input cases.
+15. Handle and display explicit errors for invalid inputs, syntax errors, mismatched parentheses, or mathematical impossibilities (division by zero).
+16. End the program.
 
 ### Pseudocode
 ```text
@@ -55,6 +56,7 @@ START PROGRAM
     END FOR
     
     POPULATE Complement Subtraction Selectors WITH keys OF variables
+    POPULATE BCD Arithmetic Selectors WITH keys OF variables
 
     TRY
       SET postfix = SHUNTING_YARD_PARSE(exprString)
@@ -84,6 +86,27 @@ START PROGRAM
     SET sum2 = paddedM + twosS (Discard Carry)
     
     DISPLAY step-by-step calculations FOR both methods
+  END FUNCTION
+
+  FUNCTION calcBCD()
+    READ var1, var2, AND operator (+ or -)
+    SET val1 = ABSOLUTE(TRUNCATE(variables[var1]))
+    SET val2 = ABSOLUTE(TRUNCATE(variables[var2]))
+
+    IF operator IS '+' THEN
+      COMPUTE Sum
+      IF any 4-bit chunk > 9 OR generates carry THEN 
+        ADD 0110 (6) to correct it
+      DISPLAY BCD Sum and correction rules applied
+    ELSE
+      COMPUTE 9's complement of val2 (subtract from 9)
+      COMPUTE 10's complement of val2 (9's comp + 1)
+      
+      ADD 9's comp to val1 -> Handle End-Around Carry or Negative
+      ADD 10's comp to val1 -> Discard Carry or Negative
+      
+      DISPLAY 9's and 10's complement subtraction steps
+    END IF
   END FUNCTION
 END PROGRAM
 ```
@@ -140,6 +163,21 @@ graph TD
     Math1 --> ShowSteps[Display Step-by-Step UI Breakdown]
     Math2 --> ShowSteps
   end
+
+  subgraph BCD Addition & Subtraction Tool
+    UpdateCompSub --> BCDSelect[User Selects Vars & Operator]
+    BCDSelect --> CheckOp{Is it + or -?}
+    
+    CheckOp -- Addition --> BCDAdd[Add BCD Variables]
+    BCDAdd --> BCDCheck{Is sum > 9 or carry generated?}
+    BCDCheck -- Yes --> BCDCorrect[Add 6 / 0110 to chunk]
+    BCDCheck -- No --> BCDShow[Display BCD Sum]
+    BCDCorrect --> BCDShow
+
+    CheckOp -- Subtraction --> BCDSub[Find 9's and 10's Complements]
+    BCDSub --> BCDAddComp[Add complements to Minuend]
+    BCDAddComp --> BCDShowSub[Display 9's and 10's Subtraction Steps]
+  end
 ```
 
 ### Program Implementation
@@ -194,7 +232,6 @@ graph TD
       </div>
 
       <div id="cases-container" class="grid grid-cols-1 gap-6">
-        <!-- Dynamic cases injected here -->
       </div>
 
       <div class="mt-6 text-center">
@@ -223,6 +260,25 @@ graph TD
         </div>
 
         <div id="comp-sub-output" class="text-slate-300 text-center font-mono">
+           Awaiting variable selection...
+        </div>
+      </div>
+
+      <div class="mt-8 p-8 bg-slate-800 dark:bg-slate-950 border-2 border-blue-500 dark:border-blue-600 rounded-2xl shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-cyan-500"></div>
+        <h2 class="text-2xl font-bold text-white mb-2 text-center">BCD Addition & Subtraction</h2>
+        <p class="text-sm text-center text-blue-400 mb-6">Select two variables and an operation. Subtraction displays both 9's and 10's complement methods.</p>
+        
+        <div class="flex justify-center items-center gap-4 mb-6">
+          <select id="bcd-var1" class="bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:ring-2 focus:ring-blue-500 font-bold text-lg" onchange="calcBCD()"></select>
+          <select id="bcd-op" class="bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:ring-2 focus:ring-blue-500 font-bold text-lg" onchange="calcBCD()">
+            <option value="+">+</option>
+            <option value="-">-</option>
+          </select>
+          <select id="bcd-var2" class="bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:ring-2 focus:ring-blue-500 font-bold text-lg" onchange="calcBCD()"></select>
+        </div>
+
+        <div id="bcd-output" class="text-slate-300 text-center font-mono">
            Awaiting variable selection...
         </div>
       </div>
@@ -504,6 +560,7 @@ graph TD
       });
 
       updateComplementSelects();
+      updateBCDSelects();
 
       if (!allValid || Object.keys(window.globalVars).length === 0) {
         totalDiv.innerHTML = "<p class='text-slate-400 text-lg'>Enter valid numbers in all active fields to compute.</p>";
@@ -697,6 +754,114 @@ graph TD
       `;
     }
 
+    function toBCD(str) {
+      return str.split('').map(d => parseInt(d).toString(2).padStart(4, '0')).join(' ');
+    }
+
+    function getNinesComp(str) {
+      return str.split('').map(d => (9 - parseInt(d)).toString()).join('');
+    }
+
+    function updateBCDSelects() {
+      const v1Sel = document.getElementById('bcd-var1');
+      const v2Sel = document.getElementById('bcd-var2');
+      const v1Val = v1Sel.value;
+      const v2Val = v2Sel.value;
+
+      v1Sel.innerHTML = '';
+      v2Sel.innerHTML = '';
+
+      Object.keys(window.globalVars).forEach(key => {
+        v1Sel.add(new Option(`Var ${key}`, key));
+        v2Sel.add(new Option(`Var ${key}`, key));
+      });
+
+      if(v1Val && window.globalVars[v1Val] !== undefined) v1Sel.value = v1Val;
+      if(v2Val && window.globalVars[v2Val] !== undefined) v2Sel.value = v2Val;
+      else if(Object.keys(window.globalVars).length > 1) v2Sel.selectedIndex = 1;
+
+      calcBCD();
+    }
+
+    function calcBCD() {
+      let k1 = document.getElementById('bcd-var1').value;
+      let k2 = document.getElementById('bcd-var2').value;
+      let op = document.getElementById('bcd-op').value;
+      let out = document.getElementById('bcd-output');
+
+      if(!k1 || !k2 || window.globalVars[k1] === undefined || window.globalVars[k2] === undefined) {
+        out.innerHTML = "Awaiting valid variables for calculation...";
+        return;
+      }
+
+      let val1 = Math.abs(Math.trunc(window.globalVars[k1])).toString();
+      let val2 = Math.abs(Math.trunc(window.globalVars[k2])).toString();
+
+      let maxLen = Math.max(val1.length, val2.length);
+      val1 = val1.padStart(maxLen, '0');
+      val2 = val2.padStart(maxLen, '0');
+
+      let bcd1 = toBCD(val1);
+      let bcd2 = toBCD(val2);
+
+      let html = `<div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner mb-4 text-left">
+        <p class="text-slate-400 mb-1">Var 1 (${val1}): <span class="text-white">${bcd1}</span></p>
+        <p class="text-slate-400">Var 2 (${val2}): <span class="text-white">${bcd2}</span></p>
+      </div>`;
+
+      if(op === '+') {
+        let sum = (parseInt(val1, 10) + parseInt(val2, 10)).toString();
+        let bcdSum = toBCD(sum);
+        
+        html += `<div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner text-left">
+          <h3 class="text-cyan-400 font-bold mb-4 border-b border-slate-700 pb-2">BCD Addition Method</h3>
+          <p class="text-emerald-400 text-sm mb-4">Rule: If a 4-bit sum > 9 (1001) or generates a carry, add 0110 (6) to correct it.</p>
+          <p class="text-white font-bold tracking-widest bg-slate-800 p-3 rounded mb-2 leading-relaxed">  ${bcd1}<br>+ ${bcd2}<br>-------------------------<br>Final BCD: ${bcdSum}</p>
+          <p class="text-slate-400 mt-2">Decimal Equivalent: <span class="text-white font-bold">${sum}</span></p>
+        </div>`;
+      } else {
+        let nines2 = getNinesComp(val2);
+        let tens2 = (parseInt(nines2, 10) + 1).toString().padStart(maxLen, '0');
+        let diff9 = parseInt(val1, 10) + parseInt(nines2, 10);
+        let diff10 = parseInt(val1, 10) + parseInt(tens2, 10);
+        let isNeg = parseInt(val1, 10) < parseInt(val2, 10);
+
+        html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+          <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner">
+            <h3 class="text-cyan-400 font-bold mb-4 border-b border-slate-700 pb-2">9's Complement Method</h3>
+            <p class="text-slate-400 mb-2">9's Comp(V2): <span class="text-pink-400">${nines2}</span> (BCD: ${toBCD(nines2)})</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded mb-2">  ${bcd1}<br>+ ${toBCD(nines2)}</p>`;
+
+        if (!isNeg) {
+            let final9 = (diff9 + 1).toString().slice(-maxLen);
+            html += `<p class="text-emerald-400 text-sm mb-2">Carry generated. Add End-Around Carry (+1).</p>
+                     <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded">Final: ${toBCD(final9)}</p>`;
+        } else {
+            let ninesDiff = diff9.toString().padStart(maxLen, '0');
+            html += `<p class="text-emerald-400 text-sm mb-2">No carry. Result is negative in 9's complement form.</p>
+                     <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded">Final: ${toBCD(ninesDiff)}</p>`;
+        }
+        html += `</div>`;
+
+        html += `<div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner">
+            <h3 class="text-cyan-400 font-bold mb-4 border-b border-slate-700 pb-2">10's Complement Method</h3>
+            <p class="text-slate-400 mb-2">10's Comp(V2): <span class="text-pink-400">${tens2}</span> (BCD: ${toBCD(tens2)})</p>
+            <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded mb-2">  ${bcd1}<br>+ ${toBCD(tens2)}</p>`;
+
+        if (!isNeg) {
+            let final10 = diff10.toString().slice(-maxLen);
+            html += `<p class="text-emerald-400 text-sm mb-2">Carry generated. Discard carry out.</p>
+                     <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded">Final: ${toBCD(final10)}</p>`;
+        } else {
+            let tensDiff = diff10.toString().padStart(maxLen, '0');
+            html += `<p class="text-emerald-400 text-sm mb-2">No carry. Result is negative in 10's complement form.</p>
+                     <p class="text-white font-bold tracking-widest bg-slate-800 p-2 rounded">Final: ${toBCD(tensDiff)}</p>`;
+        }
+        html += `</div></div>`;
+      }
+      out.innerHTML = html;
+    }
+
     addCase();
     addCase();
     addCase();
@@ -831,6 +996,35 @@ graph TD
 3. Expected Equation Breakdown: `(10)₁₀ - (2)₁₀`
 4. Expected Logic: The system computes `10 - 2 = 8`, then dynamically generates the complements for the final computed result.
 5. Final Arithmetic Result: Binary: `1000`, Octal: `10`, Decimal: `8`, Hexadecimal: `8`, 1's Comp (Int): `11110111`, 2's Comp (Int): `11111000`.
+
+**Test Case 17: BCD Addition (No Correction Required)**
+![Sample-17](sample-outputs/Sample-Output-17.png)
+![Sample-17-1](sample-outputs/Sample-Output-17-1.png)
+1. Inputs: Set BCD Var 1 to `A` (Decimal `4`), Operator to `+`, BCD Var 2 to `B` (Decimal `3`).
+2. Expected Logic: The system computes `0100` + `0011`. Since the sum is `0111` (7) and is less than 9, no correction factor is applied.
+3. Expected Output: Final BCD is `0111`. Decimal Equivalent is `7`.
+
+**Test Case 18: BCD Addition (Correction Factor Triggered)**
+![Sample-18](sample-outputs/Sample-Output-18.png)
+![Sample-18-1](sample-outputs/Sample-Output-18-1.png)
+1. Inputs: Set BCD Var 1 to `A` (Decimal `8`), Operator to `+`, BCD Var 2 to `B` (Decimal `5`).
+2. Expected Logic: The system computes `1000` + `0101`, yielding `1101` (13). Since 13 > 9, the `+0110` (6) correction factor is applied.
+3. Expected Output: Final BCD is `0001 0011`. Decimal Equivalent is `13`.
+
+**Test Case 19: BCD Subtraction (Positive Result)**
+![Sample-19](sample-outputs/Sample-Output-19.png)
+![Sample-19-1](sample-outputs/Sample-Output-19-1.png)
+1. Inputs: Set BCD Var 1 to `A` (Decimal `8`), Operator to `-`, BCD Var 2 to `B` (Decimal `3`).
+2. Expected Logic: The tool converts `3` to its 9's and 10's complements.
+3. 9's Complement Output: Generates a carry. Adds End-Around Carry (+1) to yield `0101` (5).
+4. 10's Complement Output: Generates a carry. Discards carry out to yield `0101` (5).
+
+**Test Case 20: BCD Subtraction (Negative Result)**
+![Sample-20](sample-outputs/Sample-Output-20.png)
+![Sample-20-1](sample-outputs/Sample-Output-20-1.png)
+1. Inputs: Set BCD Var 1 to `A` (Decimal `3`), Operator to `-`, BCD Var 2 to `B` (Decimal `8`).
+2. Expected Logic: Subtracting a larger number yields no carry.
+3. Expected Output: The system identifies the lack of a carry and leaves the final result in its negative 9's complement and 10's complement forms without attempting to apply an End-Around Carry.
 
 **Code Screenshots**
 
